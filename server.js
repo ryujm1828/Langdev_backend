@@ -122,7 +122,7 @@ app.post("/:board/update_process",function (req, res) {
 });
 
 /*
-//페이지
+//리액트연동
 app.get("*", function (req, res) {
     res.sendFile(path.join(__dirname, front_path));
 });
