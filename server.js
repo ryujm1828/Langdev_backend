@@ -37,24 +37,29 @@ app.use(session({
   store: sessionStore
 }));
 
+
+
 //passport 초기화 및 세션 연결
 app.use(passport.initialize());
 app.use(passport.session());
 
 passports();
 
+app.use("/",function(req,res,next){
+  const ip = requestIp.getClientIp(req);
+  logger.info(`${req.method} / ip : ${ip} id : ${req.user} enter ${req.url}`);
+  next();
+})
 
 //메인 화면
 app.get("/", function(req,res){
-  
   if(req.user){
-    logger.info('GET /');
     console.log(req.user);
     res.send(`Hello ${req.user}`)
     console.log(req.user);
   }
   else{
-    logger.info('GET ip : /');
+    //logger.info(`GET ip : ${ip}/`);
     res.send("Pleas Login");
   }
 })
@@ -77,8 +82,8 @@ app.get("/:board/list",function(req,res){
 
 //로그아웃
 app.post('/logout', function(req, res, next) {
-  console.log("logout");
-  logger.info(`'LOGOUT user : ${req.user.id}/'`);
+  const ip = requestIp.getClientIp(req);
+  logger.info(`${req.method} / ip : ${ip} id : ${req.user} logout`);
   req.session.destroy(() => {
     res.redirect('/');
   });
@@ -90,7 +95,6 @@ app.get('/auth/github', passport.authenticate('github'));
 app.get('/auth/github/callback',
   passport.authenticate('github', { failureRedirect: '/login' }),
   function(req, res) {
-    logger.info(`'LOGIN user : ${req.user.id}/'`);
     // Successful authentication, redirect home.
     res.redirect('/');
 });
@@ -105,18 +109,23 @@ const board_list = ["jayu","ik","qna"];
 
 app.post("/:board/write_process", function (req, res) {
   //board가 없을 때 혹은 로그인이 안되어 있을 때 혹은 권한이 없을 때
-  if(board_list.includes(req.params.board) == false || req.user == false){
+  if(board_list.includes(req.params.board) == false || !req.user){
     res.status(404).send('not found');
   } else {
     //글쓰기
+    
   }
 });
 
 app.post("/:board/update_process",function (req, res) {
   //board가 없을 때 혹은 다른 유저 일 때
   if(board_list.includes(req.params.board) == false || req.user != db.query("")){
+    const ip = requestIp.getClientIp(req);
+    logger.info(`ip : ${ip} id : ${req.user} try update ~~~~~~~~~~~~`);
     res.status(404).send('not found');
   } else {
+    const ip = requestIp.getClientIp(req);
+    logger.info(`${req.method} / ip : ${ip} id : ${req.user} update complete`);
     //수정
   }
 });
@@ -130,5 +139,5 @@ app.get("*", function (req, res) {
 
 app.listen(PORT, function(){
   logger.info(`Server listening on port ${PORT}`);
-  console.log(`Server listening on port ${PORT}`);
+  //console.log(`Server listening on port ${PORT}`);
 })
