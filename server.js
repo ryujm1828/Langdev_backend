@@ -46,8 +46,10 @@ app.use(passport.session());
 passports();
 
 app.use("/",function(req,res,next){
-  const ip = requestIp.getClientIp(req);
-  logger.info(`${req.method} / ip : ${ip} id : ${req.user} enter ${req.url}`);
+  if(!req.user)
+    logger.info(`${req.method} / ip : ${requestIp.getClientIp(req)} enter ${req.url}`);1
+
+  logger.info(`${req.method} / id : ${req.user} enter ${req.url}`);
   next();
 })
 
