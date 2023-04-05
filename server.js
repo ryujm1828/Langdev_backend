@@ -13,6 +13,7 @@ const logger = require('./log/logger')
 const PORT = 8080;
 const requestIp = require("request-ip");
 
+//frontend로 정보 전달
 app.use(express.json());
 app.use(cors());
 
@@ -37,8 +38,6 @@ app.use(session({
   store: sessionStore
 }));
 
-
-
 //passport 초기화 및 세션 연결
 app.use(passport.initialize());
 app.use(passport.session());
@@ -46,10 +45,7 @@ app.use(passport.session());
 passports();
 
 app.use("/",function(req,res,next){
-  if(!req.user)
-    logger.info(`${req.method} / ip : ${requestIp.getClientIp(req)} enter ${req.url}`);1
-
-  logger.info(`${req.method} / id : ${req.user} enter ${req.url}`);
+  logger.info(`${req.method} / (${requestIp.getClientIp(req)}) id : ${req.user} enter ${req.url}`);
   next();
 })
 
@@ -107,30 +103,38 @@ app.get('/login', (req, res) => res.send(`<form action="http://localhost:8080/lo
 </p></form>`));
 
 //글쓰기 처리
-const board_list = ["jayu","ik","qna"];
+const board_list = ["jayu","ik","security"];
 
 app.post("/:board/write_process", function (req, res) {
+  const ip = requestIp.getClientIp(req);
+
   //board가 없을 때 혹은 로그인이 안되어 있을 때 혹은 권한이 없을 때
   if(board_list.includes(req.params.board) == false || !req.user){
+    logger.info(`${req.method} / ip : ${ip} id : ${req.user} try post but fail $`);
     res.status(404).send('not found');
   } else {
+    logger.info(`${req.method} / ip : ${ip} id : ${req.user} post $ complete`);
     //글쓰기
-    
   }
 });
 
 app.post("/:board/update_process",function (req, res) {
+  const ip = requestIp.getClientIp(req);
   //board가 없을 때 혹은 다른 유저 일 때
   if(board_list.includes(req.params.board) == false || req.user != db.query("")){
-    const ip = requestIp.getClientIp(req);
-    logger.info(`ip : ${ip} id : ${req.user} try update ~~~~~~~~~~~~`);
+    logger.info(`${req.method} / ip : ${ip} id : ${req.user} try update but fail $`);
     res.status(404).send('not found');
   } else {
-    const ip = requestIp.getClientIp(req);
-    logger.info(`${req.method} / ip : ${ip} id : ${req.user} update complete`);
+    logger.info(`${req.method} / ip : ${ip} id : ${req.user} update $ complete`);
     //수정
   }
 });
+
+/*
+app.get("/.env", function(req,res){
+  res.send("Hello Hacker?");
+})
+*/
 
 /*
 //리액트연동
@@ -140,6 +144,6 @@ app.get("*", function (req, res) {
 */
 
 app.listen(PORT, function(){
-  logger.info(`Server listening on port ${PORT}`);
+  logger.info(`Server listening on port ${PORT}`);  
   //console.log(`Server listening on port ${PORT}`);
 })
