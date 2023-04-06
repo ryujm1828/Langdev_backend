@@ -2,24 +2,28 @@ require('dotenv').config();
 const express = require("express");
 const app = express();
 const session = require("express-session");
-//const mysql = require("mysql");
-const front_path = "../community_frontend/my-app/build/index.html";  //프론트엔드
+const front_path = "../community_frontend/community_frontend/build";  //frontend path
 const MySQLStore = require('express-mysql-session')(session);    //MYSQL sessionstore
-const db = require("./db/db");                          //db관리
+const db = require("./db/db");                          //db
 const passports = require("./db/passports");            
 const passport = require("passport");
 const cors = require('cors');
 const logger = require('./log/logger')
-const PORT = 8080;
-const requestIp = require("request-ip");
+const PORT = 5000;
+const requestIp = require("request-ip");    //get ip
+const path = require("path");
 
-//frontend로 정보 전달
+//communication with frontend
 app.use(express.json());
-app.use(cors());
+app.use(cors({
+  origin: '*', // 모든 출처 허용 옵션. true 를 써도 된다.
+}));
+app.use(express.static("../"+__dirname));
 
+//connect db
 db.connect();
 
-//sessionstore 설정
+//sessionstore options
 const storeOptions = {
   host : process.env.STORE_HOST,
   port : 3306,
@@ -29,7 +33,7 @@ const storeOptions = {
 }
 const sessionStore = new MySQLStore(storeOptions);
 
-//session 설정
+//session options
 app.use(session({
   secret: "TEMPSECRET",     //secret
   resave: false,
@@ -38,18 +42,21 @@ app.use(session({
   store: sessionStore
 }));
 
-//passport 초기화 및 세션 연결
+//passport initializion and connect session
 app.use(passport.initialize());
 app.use(passport.session());
 
+//passport connect
 passports();
 
+//log
 app.use("/",function(req,res,next){
   logger.info(`${req.method} / (${requestIp.getClientIp(req)}) id : ${req.user} enter ${req.url}`);
   next();
 })
 
-//메인 화면
+//test main
+/*
 app.get("/", function(req,res){
   if(req.user){
     console.log(req.user);
@@ -57,12 +64,11 @@ app.get("/", function(req,res){
     console.log(req.user);
   }
   else{
-    //logger.info(`GET ip : ${ip}/`);
     res.send("Pleas Login");
   }
 })
-
-//username 리턴
+*/
+//username information send
 app.get("/username", function(req,res){
   if(!req.user){
     res.send(NULL);
@@ -72,13 +78,13 @@ app.get("/username", function(req,res){
   }
 })
 
-//list 리턴
+//board list send
 app.get("/:board/list",function(req,res){
   res.send(db.query(""));
 })
 
 
-//로그아웃
+//logout
 app.post('/logout', function(req, res, next) {
   const ip = requestIp.getClientIp(req);
   logger.info(`${req.method} / ip : ${ip} id : ${req.user} logout`);
@@ -97,27 +103,34 @@ app.get('/auth/github/callback',
     res.redirect('/');
 });
 
-//로그아웃 테스트용
-app.get('/login', (req, res) => res.send(`<form action="http://localhost:8080/logout" method="post"><p>
+//logout test
+/*
+app.get('/login', (req, res) => res.send(`<form action="http://localhost:5000/logout" method="post"><p>
 <input type="submit">
 </p></form>`));
+*/
 
-//글쓰기 처리
-const board_list = ["jayu","ik","security"];
+const board_list = ["jayu","ik","security","board"];
 
+//write
 app.post("/:board/write_process", function (req, res) {
   const ip = requestIp.getClientIp(req);
-
+  const title = req.body.title;
+  const content = req.body.content;
+  console.log(`title : ${title} content : ${content} user : ${req.user}`);
+  //title,content
   //board가 없을 때 혹은 로그인이 안되어 있을 때 혹은 권한이 없을 때
   if(board_list.includes(req.params.board) == false || !req.user){
     logger.info(`${req.method} / ip : ${ip} id : ${req.user} try post but fail $`);
     res.status(404).send('not found');
   } else {
     logger.info(`${req.method} / ip : ${ip} id : ${req.user} post $ complete`);
+    
     //글쓰기
   }
 });
 
+//update
 app.post("/:board/update_process",function (req, res) {
   const ip = requestIp.getClientIp(req);
   //board가 없을 때 혹은 다른 유저 일 때
@@ -135,13 +148,12 @@ app.get("/.env", function(req,res){
   res.send("Hello Hacker?");
 })
 */
-
-/*
+app.use(express.static(path.join(__dirname, front_path)));
 //리액트연동
-app.get("*", function (req, res) {
-    res.sendFile(path.join(__dirname, front_path));
+app.get("/*", function (req, res) {
+    res.sendFile(path.join(__dirname, front_path+"/index.html"));
 });
-*/
+
 
 app.listen(PORT, function(){
   logger.info(`Server listening on port ${PORT}`);  
