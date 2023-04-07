@@ -33,8 +33,7 @@ module.exports = () =>{
                     (ID, Githubid, Nickname)
                     VALUES(${profile.id}, '${profile.username}', '${profile.username}');`,
                     function(err,rows,fields){
-                    if(err) console.log(err);
-                    console.log(rows);
+                        if(err) console.log(err);
                     });
                 }
                 else{
