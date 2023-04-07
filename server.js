@@ -67,14 +67,36 @@ app.get("/", function(req,res){
   }
 })
 */
-//username information send
-app.get("/username", function(req,res){
-  if(!req.user){
+
+//user information send
+app.get("/api/userdata", function(req,res){
+  if(!req.user || !req.isAuthenticated ){
     res.send(NULL);
   }
   else{
-    res.json({username : req.user});
+    const params = req.user
+    db.query(`SELECT NICKNAME FROM USERS WHERE ID = ?`,params, function(err,rows){
+      res.send({id : req.user, nickname : rows[0].NICKNAME});
+    });
   }
+})
+
+app.get("/api/board/:id",function(req,res){
+  const params = req.params.id;
+  db.query(`SELECT * FROM BOARD WHERE PostID = ?`,params,function(err,rows){
+    if(err) console.log(err);
+    
+    else if(rows.length == 0){
+      res.status(404).send('not found');
+    }
+
+    else{
+      const titlevalue = rows[0].Title;
+      const contentvalue = rows[0].Content;
+      res.send({title : titlevalue, content : contentvalue});
+    }
+
+  })
 })
 
 //board list send
@@ -123,7 +145,14 @@ app.post("/:board/write_process", function (req, res) {
     logger.info(`${req.method} / ip : ${ip} id : ${req.user} try post but fail $`);
     //res.status(404).send('not found');
   } else {
-    logger.info(`${req.method} / ip : ${ip} id : ${req.user} post $ complete`);
+      const params = [req.body.title, req.body.content,req.user, 'TABS']
+      db.query(`INSERT INTO BOARD
+      (Title, Content, USERS_ID,TAB)
+      VALUES(?,?,?,?);`,params,
+      function(err,rows,fields){
+          if(err) console.log(err);
+      });
+      logger.info(`${req.method} / ip : ${ip} id : ${req.user} post $ complete`);
     //글쓰기
   }
   res.redirect("/");

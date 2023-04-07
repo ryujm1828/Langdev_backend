@@ -26,7 +26,8 @@ module.exports = () =>{
         },
         function(accessToken, refreshToken, profile, done) {
             //if(profile.id가 sql에 없으면 데이터 저장)
-            db.query(`SELECT * from USERS where ID=${profile.id};`,function(err,rows,fields){
+            const params = [profile.id]
+            db.query(`SELECT * from USERS where ID=? ;`,params,function(err,rows,fields){
                 if(rows.length === 0){
                     //유저회원가입
                     db.query(`INSERT INTO USERS
