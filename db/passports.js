@@ -2,12 +2,10 @@ require('dotenv').config();
 const passport = require("passport");
 const GitHubStrategy = require("passport-github2").Strategy;
 const express = require("express");
-const app = express();
-var router = express.Router();
 const db = require("./db");
 
 module.exports = () =>{
-    
+
     //로그인 최초 성공시 실행 되는 
     // done(null, user.id)로 세션을 초기화 한다.
     passport.serializeUser(function (user, done) {
@@ -28,7 +26,21 @@ module.exports = () =>{
         },
         function(accessToken, refreshToken, profile, done) {
             //if(profile.id가 sql에 없으면 데이터 저장)
-            console.log(profile.emails[0].value);
+            db.query(`SELECT * from USERS where ID=${profile.id};`,function(err,rows,fields){
+                if(rows.length === 0){
+                    //유저회원가입
+                    db.query(`INSERT INTO USERS
+                    (ID, Githubid, Nickname)
+                    VALUES(${profile.id}, '${profile.username}', '${profile.username}');`,
+                    function(err,rows,fields){
+                    if(err) console.log(err);
+                    console.log(rows);
+                    });
+                }
+                else{
+                    console.log(`${profile.id} is already exist`);
+                }
+            })
             return done(null,profile);
         }
     ));
