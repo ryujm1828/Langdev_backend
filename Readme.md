@@ -7,5 +7,6 @@
 - passport-github2
 - dotenv
 - winston
+- winston-daily-rotate-file
 - mysql
 - express-mysql-session

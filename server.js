@@ -8,16 +8,22 @@ const db = require("./db/db");                          //db
 const passports = require("./db/passports");            
 const passport = require("passport");
 const cors = require('cors');
-const logger = require('./log/logger')
+const logger = require('./log/logger');
 const PORT = 5000;
 const requestIp = require("request-ip");    //get ip
 const path = require("path");
+const {Configuration, OpenAIApi} = require("openai");
+const api = require("./router/api");
+const auth = require("./router/auth");
+const board = require("./router/board");
+const routing = require("./router/routing");
 
 //communication with frontend
 app.use(express.json());
 app.use(cors());
 app.use(express.urlencoded({extended:true}));
 app.use(express.static("../"+__dirname));
+app.use(express.static(path.join(__dirname, front_path)));
 
 //connect db
 db.connect();
@@ -32,7 +38,7 @@ const storeOptions = {
 }
 const sessionStore = new MySQLStore(storeOptions);
 
-//session options
+//session setting
 app.use(session({
   secret: "TEMPSECRET",     //secret
   resave: false,
@@ -41,11 +47,9 @@ app.use(session({
   store: sessionStore
 }));
 
-//passport initializion and connect session
+//passport initializion and connect session, connect passport
 app.use(passport.initialize());
 app.use(passport.session());
-
-//passport connect
 passports();
 
 //log
@@ -54,134 +58,16 @@ app.use("/",function(req,res,next){
   next();
 })
 
-//test main
-/*
-app.get("/", function(req,res){
-  if(req.user){
-    console.log(req.user);
-    res.send(`Hello ${req.user}`)
-    console.log(req.user);
-  }
-  else{
-    res.send("Pleas Login");
-  }
-})
-*/
+//router
+app.use('/',board);   //게시판 관련 라우팅
+app.use('/',routing); //잡다한 것들 라우팅
+app.use('/api',api);  //api(프론트와 통신) 라우팅
+app.use('/auth',auth);//로그인 관련 라우팅
 
-//user information send
-app.get("/api/userdata", function(req,res){
-  if(!req.user || !req.isAuthenticated ){
-    res.send(NULL);
-  }
-  else{
-    const params = req.user
-    db.query(`SELECT NICKNAME FROM USERS WHERE ID = ?`,params, function(err,rows){
-      res.send({id : req.user, nickname : rows[0].NICKNAME});
-    });
-  }
-})
-
-app.get("/api/board/:id",function(req,res){
-  const params = req.params.id;
-  db.query(`SELECT * FROM BOARD WHERE PostID = ?`,params,function(err,rows){
-    if(err) console.log(err);
-    
-    else if(rows.length == 0){
-      res.status(404).send('not found');
-    }
-
-    else{
-      const titlevalue = rows[0].Title;
-      const contentvalue = rows[0].Content;
-      res.send({title : titlevalue, content : contentvalue});
-    }
-
-  })
-})
-
-//board list send
-app.get("/:board/list",function(req,res){
-  res.send(db.query(""));
-})
-
-
-//logout
-app.post('/logout', function(req, res, next) {
-  const ip = requestIp.getClientIp(req);
-  logger.info(`${req.method} / ip : ${ip} id : ${req.user} logout`);
-  req.session.destroy(() => {
-    res.redirect('/');
-  });
-});
-
-//github 로그인 처리
-app.get('/auth/github', passport.authenticate('github'));
-//github 로그인 데이터 받아오기
-app.get('/auth/github/callback',
-  passport.authenticate('github', { failureRedirect: '/login' }),
-  function(req, res) {
-    // Successful authentication, redirect home.
-    res.redirect('/');
-});
-
-//logout test
-/*
-app.get('/login', (req, res) => res.send(`<form action="http://localhost:5000/logout" method="post"><p>
-<input type="submit">
-</p></form>`));
-*/
-
-const board_list = ["jayu","ik","security","board"];
-
-//write
-app.post("/:board/write_process", function (req, res) {
-  const ip = requestIp.getClientIp(req);
-  const title = req.body.title;
-  const content = req.body.content;
-  console.log(`title : ${title} content : ${content} user : ${req.user}`);
-  //title,content
-  //board가 없을 때 혹은 로그인이 안되어 있을 때 혹은 권한이 없을 때
-  if(board_list.includes(req.params.board) == false || !req.isAuthenticated()){
-    logger.info(`${req.method} / ip : ${ip} id : ${req.user} try post but fail $`);
-    //res.status(404).send('not found');
-  } else {
-      const params = [req.body.title, req.body.content,req.user, 'TABS']
-      db.query(`INSERT INTO BOARD
-      (Title, Content, USERS_ID,TAB)
-      VALUES(?,?,?,?);`,params,
-      function(err,rows,fields){
-          if(err) console.log(err);
-      });
-      logger.info(`${req.method} / ip : ${ip} id : ${req.user} post $ complete`);
-    //글쓰기
-  }
-  res.redirect("/");
-});
-
-//update
-app.post("/:board/update_process",function (req, res) {
-  const ip = requestIp.getClientIp(req);
-  //board가 없을 때 혹은 다른 유저 일 때
-  if(board_list.includes(req.params.board) == false || req.user != db.query("") || !req.isAuthenticated()){
-    logger.info(`${req.method} / ip : ${ip} id : ${req.user} try update but fail $`);
-    res.status(404).send('not found');
-  } else {
-    logger.info(`${req.method} / ip : ${ip} id : ${req.user} update $ complete`);
-    //수정
-  }
-});
-
-/*
-app.get("/.env", function(req,res){
-  res.send("Hello Hacker?");
-})
-*/
-app.use(express.static(path.join(__dirname, front_path)));
 //리액트연동
 app.get("/*", function (req, res) {
     res.sendFile(path.join(__dirname, front_path+"/index.html"));
 });
-
 
 app.listen(PORT, function(){
   logger.info(`Server listening on port ${PORT}`);  
