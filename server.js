@@ -2,12 +2,8 @@ require('dotenv').config();
 const express = require("express");
 const app = express();
 const session = require("express-session");
-<<<<<<< HEAD
 const front_path = "../community_frontend/community_frontend/build";
-=======
-const front_path = "../community_frontend/community_frontend/build";  //frontend path for ryu
 //const front_path = "./community_frontend/community_frontend/build";  //frontend path for lim
->>>>>>> ce89d2c1b7ff7feb1308756389262419e8ec6a75
 const MySQLStore = require('express-mysql-session')(session);    //MYSQL sessionstore
 const db = require("./db/db");                          //db
 const passports = require("./db/passports"); 
