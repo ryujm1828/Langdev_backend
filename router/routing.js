@@ -1,3 +1,5 @@
+//기타 라우팅
+
 const express = require('express');
 const router = express.Router();
 const requestIp = require("request-ip");    //get ip

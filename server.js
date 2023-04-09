@@ -58,7 +58,7 @@ app.use("/",function(req,res,next){
   next();
 })
 
-//router
+//routing
 app.use('/',board);   //게시판 관련 라우팅
 app.use('/',routing); //잡다한 것들 라우팅
 app.use('/api',api);  //api(프론트와 통신) 라우팅
@@ -69,6 +69,7 @@ app.get("/*", function (req, res) {
     res.sendFile(path.join(__dirname, front_path+"/index.html"));
 });
 
+//서버 실행
 app.listen(PORT, function(){
   logger.info(`Server listening on port ${PORT}`);  
   //console.log(`Server listening on port ${PORT}`);

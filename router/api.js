@@ -1,3 +1,5 @@
+//frontend에게 데이터를 보내줌
+
 const express = require('express');
 const router = express.Router();
 const db = require("../db/db");

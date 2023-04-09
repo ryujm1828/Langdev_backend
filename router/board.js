@@ -1,3 +1,5 @@
+//게시판 관련 작업들
+
 const express = require('express');
 const router = express.Router();
 const db = require("../db/db");

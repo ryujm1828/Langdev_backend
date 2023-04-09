@@ -1,3 +1,5 @@
+//인증과 관련된 작업들
+
 const express = require('express');
 const router = express.Router();
 const passport = require("passport");
