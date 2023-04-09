@@ -3,10 +3,10 @@ const express = require("express");
 const app = express();
 const session = require("express-session");
 // const front_path = "../community_frontend/community_frontend/build";  //frontend path for ryu
-const front_path = "./community_frontend/community_frontend/build";  //frontend path for lim
+const front_path = "../community_frontend/community_frontend/build";  //frontend path for lim
 const MySQLStore = require('express-mysql-session')(session);    //MYSQL sessionstore
 const db = require("./db/db");                          //db
-const passports = require("./db/passports");            
+const passports = require("./db/passports"); 
 const passport = require("passport");
 const cors = require('cors');
 const logger = require('./log/logger');
@@ -17,7 +17,6 @@ const api = require("./router/api");
 const auth = require("./router/auth");
 const board = require("./router/board");
 const routing = require("./router/routing");
-
 //communication with frontend
 app.use(express.json());
 app.use(cors());
