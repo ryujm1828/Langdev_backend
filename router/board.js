@@ -6,7 +6,6 @@ const requestIp = require("request-ip");    //get ip
 const board_list = ["jayu","ik","security","board"];    //게시판 리스트
 //const sanitizer = require("../middle/sanitizer");
 const logger = require('../log/logger');
-console.log("err");
 
 router.get("/:board/list",function(req,res){
     res.send(db.query(""));
@@ -25,13 +24,16 @@ router.post("/:board/write_process", function (req, res,next) {
       //res.status(404).send('not found');
     } else {
         const params = [title, content, req.user,'TABS'];
+        let insertid;
         db.query(`INSERT INTO BOARD
         (Title, Content, USERS_ID,TAB)
         VALUES(?,?,?,?);`,params,
         function(err,rows,fields){
             if(err) console.log(err);
+            insertid = rows.insertId;
+            logger.info(`${req.method} / ip : ${ip} id : ${req.user} postid ${insertid} complete`);
         });
-        logger.info(`${req.method} / ip : ${ip} id : ${req.user} post $ complete`);
+        
       //글쓰기
     }
     res.redirect("/");

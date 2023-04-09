@@ -9,10 +9,11 @@ const requestIp = require("request-ip");    //get ip
 
 //id 전송
 router.get('/id', (req, res) => {
-    if(!req.user || req.isAuthenticated())
-        res.send(req.user);
-    else
+    if(!req.user || !req.isAuthenticated ){
         res.send(NULL);
+    }
+    else
+        res.send(req.user);
 });
 
 //닉네임 전송
@@ -59,7 +60,7 @@ router.get("/board/:id",function(req,res){
     })
 })
 
-const cost = 10;
+const cost = 10;        //chatGPT 이용 cost
 
 //chatGPT 답변 전송
 router.get("/api/chatGPT",function(req,res){
