@@ -13,7 +13,7 @@ router.get('/id', (req, res) => {
         res.send(NULL);
     }
     else
-        res.send(`${req.user}`);
+        res.send({id : req.user});
 });
 
 //닉네임 전송
@@ -24,7 +24,8 @@ router.get('/nickname', (req,res)=>{
     else{
         const params = [req.user];
         db.query(`SELECT NICKNAME FROM USERS WHERE ID = ?`,params, function(err,rows){
-        res.send(rows[0].NICKNAME);
+            
+            res.send({nickanme : rows[0].NICKNAME});
         });
     }
 })
@@ -37,13 +38,13 @@ router.get('/githubid', (req,res)=>{
     else{
         const params = [req.user]
         db.query(`SELECT NICKNAME FROM USERS WHERE ID = ?`,params, function(err,rows){
-        res.send(rows[0].GITHUBID);
+        res.send({githubid : rows[0].GITHUBID});
         });
     }
 })
 
 //board 제목,내용 전송
-router.get("/board/:id",function(req,res){
+router.get("/board/:id/title",function(req,res){
     const params = [req.params.id];
     db.query(`SELECT * FROM BOARD WHERE PostID = ?`,params,function(err,rows){
       if(err) console.log(err);
@@ -54,8 +55,23 @@ router.get("/board/:id",function(req,res){
 
       else{
         const titlevalue = rows[0].Title;
+        res.send({title : titlevalue});
+      }
+    })
+})
+
+router.get("/board/:id/content",function(req,res){
+    const params = [req.params.id];
+    db.query(`SELECT * FROM BOARD WHERE PostID = ?`,params,function(err,rows){
+      if(err) console.log(err);
+      
+      else if(rows.length == 0){
+        res.status(404).send('not found');
+      }
+
+      else{
         const contentvalue = rows[0].Content;
-        res.send({title : titlevalue, content : contentvalue});
+        res.send({content : contentvalue});
       }
     })
 })
