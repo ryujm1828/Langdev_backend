@@ -12,6 +12,7 @@ const logger = require('./log/logger');
 const PORT = 5000;
 const requestIp = require("request-ip");    //get ip
 const path = require("path");
+const chatGPT = require("./middle/openai");   //chatGPT
 const api = require("./router/api");
 const auth = require("./router/auth");
 const board = require("./router/board");

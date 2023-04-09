@@ -1,6 +1,10 @@
 const express = require('express');
 const router = express.Router();
-const db = require("../db/db");     
+const db = require("../db/db");
+const chatGPT = require("../middle/openai");
+const logger = require('../log/logger');
+const requestIp = require("request-ip");    //get ip
+
 //id 전송
 router.get('/id', (req, res) => {
     if(!req.user || req.isAuthenticated())
@@ -35,6 +39,7 @@ router.get('/githubid', (req,res)=>{
     }
 })
 
+//board 제목,내용 전송
 router.get("/board/:id",function(req,res){
     const params = [req.params.id];
     db.query(`SELECT * FROM BOARD WHERE PostID = ?`,params,function(err,rows){
@@ -50,6 +55,38 @@ router.get("/board/:id",function(req,res){
         res.send({title : titlevalue, content : contentvalue});
       }
     })
-  })
+})
+
+const cost = 10;
+
+//chatGPT 답변 전송
+router.get("/api/chatGPT",function(req,res){
+    const comment = req.body.comment;
+    const ip = requestIp.getClientIp(req);
+    
+    //권한이 있을 때
+    if(req.user && req.isAuthenticated){
+        //포인트 확인
+        db.query("", function(err,rows){
+            const credit = rows[0].credit;
+            if(credit < 0){
+                logger.error(`ip : ${ip} id : ${req.user} credit is ${credit}`)
+            }
+            else if(credit >= cost){
+                logger.info(`ip : ${ip} id : ${req.user} use chat GPT\n Comment : ${comment}`);
+                db.query("");   //credit 감소
+
+                res.send(chatGPT(comment));
+            
+            }
+            else{
+                res.send("포인트가 부족합니다.");
+            }
+        })
+    }
+    else{
+        res.send(NULL);
+    }
+})
 
 module.exports = router;
