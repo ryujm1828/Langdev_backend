@@ -1,14 +1,13 @@
 //게시판 관련 작업들
-
 const express = require('express');
 const router = express.Router();
 const db = require("../db/db");
 const requestIp = require("request-ip");    //get ip
 const board_list = ["jayu","ik","security","board"];    //게시판 리스트
-const sanitizer = require("../middle/sanitizer");
+//const sanitizer = require("../middle/sanitizer");
 const logger = require('../log/logger');
+console.log("err");
 
-//board list send
 router.get("/:board/list",function(req,res){
     res.send(db.query(""));
 })

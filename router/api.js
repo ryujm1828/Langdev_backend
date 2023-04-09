@@ -3,7 +3,7 @@
 const express = require('express');
 const router = express.Router();
 const db = require("../db/db");
-const chatGPT = require("../middle/openai");
+//const chatGPT = require("../middle/openai");
 const logger = require('../log/logger');
 const requestIp = require("request-ip");    //get ip
 
