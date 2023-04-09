@@ -5,7 +5,13 @@ const router = express.Router();
 const passport = require("passport");
 
 //github 로그인 처리
-router.get('/github', passport.authenticate('github'));
+router.get('/github', passport.authenticate('github',{
+  successRedirect: '/',
+  failureRedirect: '/login',
+  failureFlash: true,
+  successFlash: true
+}));
+
 //github 로그인 데이터 받아오기
 router.get('/github/callback',
   passport.authenticate('github', { failureRedirect: '/login' }),
