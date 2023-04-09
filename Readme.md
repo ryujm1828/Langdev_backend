@@ -1,7 +1,7 @@
 # Community_Backend
 ## 사용 모듈
 - express
-- express-seession
+- express-session
 - nodemon
 - passport
 - passport-github2
@@ -12,6 +12,7 @@
 - express-mysql-session
 - request-ip
 - sanitize-html
+- openai
 
 ## api
 ### /api/id
