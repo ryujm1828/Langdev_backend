@@ -13,7 +13,7 @@ router.get('/id', (req, res) => {
         res.send(NULL);
     }
     else
-        res.send(req.user);
+        res.send(`${req.user}`);
 });
 
 //닉네임 전송
