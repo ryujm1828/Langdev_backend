@@ -2,8 +2,8 @@ require('dotenv').config();
 const express = require("express");
 const app = express();
 const session = require("express-session");
-// const front_path = "../community_frontend/community_frontend/build";  //frontend path for ryu
-const front_path = "./community_frontend/community_frontend/build";  //frontend path for lim
+const front_path = "../community_frontend/community_frontend/build";  //frontend path for ryu
+//const front_path = "./community_frontend/community_frontend/build";  //frontend path for lim
 const MySQLStore = require('express-mysql-session')(session);    //MYSQL sessionstore
 const db = require("./db/db");                          //db
 const passports = require("./db/passports");            
@@ -71,6 +71,6 @@ app.get("/*", function (req, res) {
 
 //서버 실행
 app.listen(PORT, function(){
-  logger.info(`Server listening on port ${PORT}`);  
+  logger.info(`Server listening on port ${PORT}`);
   //console.log(`Server listening on port ${PORT}`);
 })

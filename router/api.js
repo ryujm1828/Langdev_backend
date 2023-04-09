@@ -9,7 +9,7 @@ const requestIp = require("request-ip");    //get ip
 
 //id 전송
 router.get('/id', (req, res) => {
-    if(!req.user || !req.isAuthenticated){
+    if(!req.user || !req.isAuthenticated() ){
         res.send(NULL);
     }
     else
@@ -18,11 +18,11 @@ router.get('/id', (req, res) => {
 
 //닉네임 전송
 router.get('/nickname', (req,res)=>{
-    if(!req.user || !req.isAuthenticated ){
+    if(!req.user || !req.isAuthenticated() ){
         res.send(NULL);
     }
     else{
-        const params = [req.user]
+        const params = [req.user];
         db.query(`SELECT NICKNAME FROM USERS WHERE ID = ?`,params, function(err,rows){
         res.send(rows[0].NICKNAME);
         });
@@ -31,7 +31,7 @@ router.get('/nickname', (req,res)=>{
 
 //githubid 전송
 router.get('/githubid', (req,res)=>{
-    if(!req.user || !req.isAuthenticated ){
+    if(!req.user || !req.isAuthenticated() ){
         res.send(NULL);
     }
     else{
@@ -68,7 +68,7 @@ router.get("/api/chatGPT",function(req,res){
     const ip = requestIp.getClientIp(req);
     
     //권한이 있을 때
-    if(req.user && req.isAuthenticated){
+    if(req.user && req.isAuthenticated()){
         //포인트 확인
         db.query("", function(err,rows){
             const credit = rows[0].credit;
