@@ -1,7 +1,7 @@
 # Community_Backend
 ## 사용 모듈
 - express
-- express-session
+- express-seession
 - nodemon
 - passport
 - passport-github2
