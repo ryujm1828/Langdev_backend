@@ -9,7 +9,7 @@ const requestIp = require("request-ip");    //get ip
 
 //id 전송
 router.get('/id', (req, res) => {
-    if(!req.user || !req.isAuthenticated ){
+    if(!req.user || !req.isAuthenticated){
         res.send(NULL);
     }
     else
