@@ -10,16 +10,17 @@ const requestIp = require("request-ip");    //get ip
 //id 전송
 router.get('/id', (req, res) => {
     if(!req.user || !req.isAuthenticated() ){
-        res.send(NULL);
+        res.send(null);
     }
     else
-        res.send({id : req.user});
+        res.send(req.user);
+    //    res.send({id : req.user});
 });
 
 //닉네임 전송
 router.get('/nickname', (req,res)=>{
     if(!req.user || !req.isAuthenticated() ){
-        res.send(NULL);
+        res.send(null);
     }
     else{
         const params = [req.user];
@@ -33,7 +34,7 @@ router.get('/nickname', (req,res)=>{
 //githubid 전송
 router.get('/githubid', (req,res)=>{
     if(!req.user || !req.isAuthenticated() ){
-        res.send(NULL);
+        res.send(null);
     }
     else{
         const params = [req.user]
