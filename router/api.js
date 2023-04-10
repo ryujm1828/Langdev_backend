@@ -13,7 +13,7 @@ router.get('/id', (req, res) => {
         res.send(null);
     }
     else
-        res.send(req.user);
+        res.send({id : req.user});
     //    res.send({id : req.user});
 });
 
