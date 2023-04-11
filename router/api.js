@@ -1,5 +1,4 @@
 //frontend에게 데이터를 보내줌
-
 const express = require('express');
 const router = express.Router();
 const db = require("../db/db");
@@ -75,6 +74,16 @@ router.get("/board/:id/content",function(req,res){
         res.send({content : contentvalue});
       }
     })
+})
+
+router.get("/:board/list",function(req,res){
+    const params = [req.params.board];
+    const tab = req.query.tab;
+    const page = req.query.page;
+    const boardnum = 20;    //불러올 게시글 개수
+    db.query(`SELECT Title, POSTID, USERS_ID FROM BOARD WHERE BOARDNAME = ? OERDER BY POSTID DESC LIMIT ${(req.params.page-1)*20}, ${boardnum}`,params,function(err,rows){
+        //게시글 목록 전송
+    });
 })
 
 const cost = 10;        //chatGPT 이용 cost

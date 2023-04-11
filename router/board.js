@@ -9,10 +9,6 @@ const cleanxss = require("../middle/sanitizer");
 //const sanitizer = require("../middle/sanitizer");
 const logger = require('../log/logger');
 
-router.get("/:board/list",function(req,res){
-    res.send(db.query(""));
-})
-
 //write
 router.post("/:board/write_process", function (req, res,next) {
     const ip = requestIp.getClientIp(req);
