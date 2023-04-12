@@ -22,7 +22,7 @@ router.post("/:board/write_process", function (req, res,next) {
       //res.status(404).send('not found');
     } else {
         //글 작성
-        const params = [title, content, req.user,'TABS','category'];
+        const params = [title, content, req.user,'TABS',req.params.board];
         let insertid;
         db.query(`INSERT 
         INTO
@@ -34,10 +34,10 @@ router.post("/:board/write_process", function (req, res,next) {
             insertid = rows.insertId;
             logger.info(`${req.method} / ip : ${ip} id : ${req.user} postid ${insertid} complete`);
         });
-        
       //글쓰기
     }
-    res.redirect("/");
+    console.log(req.params.board);
+    res.redirect(`/${req.params.board}`);
 });
   
 //update
