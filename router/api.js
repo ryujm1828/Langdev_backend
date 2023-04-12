@@ -81,7 +81,7 @@ router.get("/board/list/all",function(req,res){
     const tab = req.query.tab;
     const page = 1;//req.query.page;
     const boardnum = 20;    //불러올 게시글 개수
-    db.query(`SELECT title, postid, authorid,tab,category,isBest,good,bad FROM BOARD ORDER BY POSTID DESC LIMIT ${(page-1)*20},${boardnum}`,params,function(err,rows){
+    db.query(`SELECT title, content, postid, authorid,tab,category,isBest,good,bad FROM BOARD ORDER BY POSTID DESC LIMIT ${(page-1)*20},${boardnum}`,params,function(err,rows){
         console.log(rows);
         res.send(rows);
         //게시글 목록 전송
