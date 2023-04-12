@@ -22,11 +22,13 @@ router.post("/:board/write_process", function (req, res,next) {
       //res.status(404).send('not found');
     } else {
         //글 작성
-        const params = [title, content, req.user,'TABS'];
+        const params = [title, content, req.user,'TABS','category'];
         let insertid;
-        db.query(`INSERT INTO BOARD
-        (Title, Content, USERS_ID,TAB)
-        VALUES(?,?,?,?);`,params,
+        db.query(`INSERT 
+        INTO
+        board(title, content, authorId, tab, category)
+        VALUES
+        (?,?,?,?,?);`,params,
         function(err,rows,fields){
             if(err) console.log(err);
             insertid = rows.insertId;

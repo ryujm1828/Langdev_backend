@@ -76,12 +76,13 @@ router.get("/board/:id/content",function(req,res){
     })
 })
 
-router.get("/:board/list",function(req,res){
-    const params = [req.params.board];
+router.get("/board/list/all",function(req,res){
+    const params = ["category"];
     const tab = req.query.tab;
-    const page = req.query.page;
+    const page = 1;//req.query.page;
     const boardnum = 20;    //불러올 게시글 개수
-    db.query(`SELECT Title, POSTID, USERS_ID FROM BOARD WHERE BOARDNAME = ? OERDER BY POSTID DESC LIMIT ${(req.params.page-1)*20}, ${boardnum}`,params,function(err,rows){
+    db.query(`SELECT Title, POSTID, authorid,tab,category,isBest,good,bad FROM BOARD ORDER BY POSTID DESC LIMIT ${page-1},${boardnum}`,params,function(err,rows){
+        console.log(rows);
         //게시글 목록 전송
     });
 })
