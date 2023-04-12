@@ -119,7 +119,7 @@ router.get("/board/list/best",function(req,res){
 const cost = 10;        //chatGPT 이용 cost
 
 //chatGPT 답변 전송
-router.get("/api/chatGPT",function(req,res){
+router.get("/chatGPT",function(req,res){
     const comment = req.body.comment;
     const ip = requestIp.getClientIp(req);
     
