@@ -85,15 +85,14 @@ router.get("/board/:id/content",function(req,res){
 })
 
 router.get("/board/list/all",function(req,res){
-    
     const tab = req.query.tab;
     let page = 1;//req.query.page;
     const boardnum = 20;    //불러올 게시글 개수
-    const params = [page-1,boardnum];
     page = Number(page);
     if(page < 1){
         page = 1;
-    } 
+    }
+    const params = [page-1,boardnum];
     db.query(`SELECT title, content, postid, authorid, tab,category,isBest,good,bad FROM BOARD ORDER BY POSTID DESC LIMIT ?,?`,params, function(err,rows){
             console.log(rows);
             res.send(rows);
@@ -101,14 +100,18 @@ router.get("/board/list/all",function(req,res){
     });
 })
 
-router.get("/board/list/",function(req,res){
-    const params = ["category"];
+router.get("/board/list/best",function(req,res){
     const tab = req.query.tab;
-    const page = 1;//req.query.page;
+    let page = 1;//req.query.page;
     const boardnum = 20;    //불러올 게시글 개수
-    db.query(`SELECT Title, POSTID, authorid,tab,category,isBest,good,bad FROM BOARD ORDER BY POSTID DESC LIMIT ${(page-1)*20},${boardnum}`,params,function(err,rows){
+    page = Number(page);
+    if(page < 1){
+        page = 1;
+    }
+    const params = [page-1,boardnum];
+    db.query(`SELECT Title, POSTID, authorid,tab,category,isBest,good,bad FROM BOARD WHERE isBest = true ORDER BY POSTID DESC LIMIT ?,?1`,params,function(err,rows){
         console.log(rows);
-        res.send(rows); 
+        res.send(rows);
         //게시글 목록 전송
     });
 })
