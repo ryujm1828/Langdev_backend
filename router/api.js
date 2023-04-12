@@ -19,7 +19,7 @@ router.get('/id', (req, res) => {
 //닉네임 전송
 router.get('/nickname', (req,res)=>{
     if(!req.user || !req.isAuthenticated() ){
-        res.send(null);
+        res.send({nickanme : null});
     }
     else{
         const params = [req.user];
@@ -33,7 +33,7 @@ router.get('/nickname', (req,res)=>{
 //githubid 전송
 router.get('/githubid', (req,res)=>{
     if(!req.user || !req.isAuthenticated() ){
-        res.send(null);
+        res.send({githubid : null});
     }
     else{
         const params = [req.user]
