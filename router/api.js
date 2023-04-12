@@ -8,8 +8,8 @@ const requestIp = require("request-ip");    //get ip
 
 //id 전송
 router.get('/id', (req, res) => {
-    if(!req.user || !req.isAuthenticated() ){
-        res.send(null);
+    if(!req.user || !req.isAuthenticated()){
+        res.send({id : null});
     }
     else
         res.send({id : req.user});
