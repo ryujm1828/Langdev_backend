@@ -19,13 +19,13 @@ router.get('/id', (req, res) => {
 //닉네임 전송
 router.get('/nickname', (req,res)=>{
     if(!req.user || !req.isAuthenticated() ){
-        res.send({nickanme : null});
+        res.send({nickname : null});
     }
     else{
         const params = [req.user];
         db.query(`SELECT NICKNAME FROM USERS WHERE ID = ?`,params, function(err,rows){
             
-            res.send({nickanme : rows[0].NICKNAME});
+            res.send({nickname : rows[0].NICKNAME});
         });
     }
 })
