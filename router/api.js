@@ -52,34 +52,15 @@ router.get('/githubid', (req,res)=>{
 })
 
 //board 제목,내용 전송
-router.get("/board/:id/title",function(req,res){
+router.get("/board/post/:id",function(req,res){
     const params = [req.params.id];
-    db.query(`SELECT * FROM BOARD WHERE PostID = ?`,params,function(err,rows){
+    db.query(`SELECT * FROM BOARD WHERE postId = ?`,params,function(err,rows){
       if(err) console.log(err);
-      
       else if(rows.length == 0){
         res.status(404).send('not found');
       }
-
       else{
-        const titlevalue = rows[0].Title;
-        res.send({title : titlevalue});
-      }
-    })
-})
-
-router.get("/board/:id/content",function(req,res){
-    const params = [req.params.id];
-    db.query(`SELECT * FROM BOARD WHERE PostID = ?`,params,function(err,rows){
-      if(err) console.log(err);
-      
-      else if(rows.length == 0){
-        res.status(404).send('not found');
-      }
-
-      else{
-        const contentvalue = rows[0].Content;
-        res.send({content : contentvalue});
+        res.send(rows[0]);
       }
     })
 })
