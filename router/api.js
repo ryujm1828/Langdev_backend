@@ -95,12 +95,12 @@ router.get("/board/list/best",function(req,res){
         res.send(rows);
         //게시글 목록 전송
     });
-})
+})아
 
 const cost = 10;        //chatGPT 이용 cost
 
 //chatGPT 답변 전송
-router.get("/chatGPT",function(req,res){
+router.post("/chatGPT",function(req,res){
     const comment = req.body.comment;
     const ip = requestIp.getClientIp(req);
     
