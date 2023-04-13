@@ -3,13 +3,13 @@ require('dotenv').config();
 const {Configuration, OpenAIApi} = require("openai");
 
 const openaiconf = new Configuration({
-    organization: prcoeess.env.OPENAI_ORGANIZATION,
     apiKey: process.env.OPENAI_API_KEY,
 })
 
 const openai = new OpenAIApi(openaiconf);
 
 exports.chatGPT = async (prompt) => {
+    
     const response = await openai.createChatCompletion({
         model: "gpt-3.5-turbo",
         messages: [{ role: "user", content: prompt }],
