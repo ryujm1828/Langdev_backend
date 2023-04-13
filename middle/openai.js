@@ -8,13 +8,15 @@ const openaiconf = new Configuration({
 
 const openai = new OpenAIApi(openaiconf);
 
-const chatGPT = (prompt) => {
-    const response = openai.createChatCompletion({
+async function chatGPT(prompt,callback) {
+    const response = await openai.createChatCompletion({
         model: "gpt-3.5-turbo",
         messages: [{ role: "user", content: prompt }],
         max_tokens: 500,
     });
-    console.log(response.data.choices[0].message.content);
+    const result = response.data.choices[0].message.content
+    console.log(`${result}`);
+    callback(result);
 }
 
 module.exports = chatGPT;

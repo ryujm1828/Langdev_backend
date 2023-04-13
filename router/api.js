@@ -108,9 +108,12 @@ router.post("/chatGPT",function(req,res){
     if(req.user && req.isAuthenticated()){
         //test 전송
         console.log(`comment : ${comment}`);
-        const res = chatGPT(comment);
-        res.send({gpt : res});
-
+        chatGPT(comment,function(result){
+            console.log(`result : ${result}`);
+            res.send({gpt : result});
+        });
+        
+        
         //포인트 확인
         /*
         db.query("", function(err,rows){
@@ -132,7 +135,7 @@ router.post("/chatGPT",function(req,res){
         */
     }
     else{
-        res.send(NULL);
+        res.send(null);
     }
 })
 
