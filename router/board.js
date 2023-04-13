@@ -26,9 +26,9 @@ router.post("/:board/write_process", function (req, res,next) {
         let insertid;
         db.query(`INSERT 
         INTO
-        board(title, content, authorId, tab, category)
+        POST(title, content, authorId, tab, category, postDate, editDate)
         VALUES
-        (?,?,?,?,?);`,params,
+        (?,?,?,?,?,NOW(),NOW());`,params,
         function(err,rows,fields){
             if(err) console.log(err);
             insertid = rows.insertId;
@@ -36,7 +36,6 @@ router.post("/:board/write_process", function (req, res,next) {
         });
       //글쓰기
     }
-    console.log(req.params.board);
     res.redirect(`/${req.params.board}`);
 });
   

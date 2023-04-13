@@ -54,7 +54,7 @@ router.get('/githubid', (req,res)=>{
 //board 제목,내용 전송
 router.get("/board/post/:id",function(req,res){
     const params = [req.params.id];
-    db.query(`SELECT * FROM BOARD WHERE postId = ?`,params,function(err,rows){
+    db.query(`SELECT * FROM POST WHERE postId = ?`,params,function(err,rows){
       if(err) console.log(err);
       else if(rows.length == 0){
         res.status(404).send('not found');
@@ -74,10 +74,13 @@ router.get("/board/list/all",function(req,res){
         page = 1;
     }
     const params = [page-1,boardnum];
-    db.query(`SELECT title, content, postid, authorid, tab,category,isBest,good,bad FROM BOARD ORDER BY POSTID DESC LIMIT ?,?`,params, function(err,rows){
+    db.query(`SELECT title, content, postid, authorid, tab, category, isBest FROM POST ORDER BY POSTID DESC LIMIT ?,?`,params, function(err,rows){
+        if(err) console.log(err);
+        else{
             console.log(rows);
             res.send(rows);
             //게시글 목록 전송
+        }
     });
 })
 
@@ -90,7 +93,7 @@ router.get("/board/list/best",function(req,res){
         page = 1;
     }
     const params = [page-1,boardnum];
-    db.query(`SELECT Title, POSTID, authorid,tab,category,isBest,good,bad FROM BOARD WHERE isBest = true ORDER BY POSTID DESC LIMIT ?,?1`,params,function(err,rows){
+    db.query(`SELECT Title, POSTID, authorid,tab,category,isBest,good,bad FROM POST WHERE isBest = true ORDER BY POSTID DESC LIMIT ?,?1`,params,function(err,rows){
         console.log(rows);
         res.send(rows);
         //게시글 목록 전송
