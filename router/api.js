@@ -106,7 +106,11 @@ router.get("/chatGPT",function(req,res){
     
     //권한이 있을 때
     if(req.user && req.isAuthenticated()){
+        //test 전송
+        res.send({gpt : chatGPT(comment)});
+
         //포인트 확인
+        /*
         db.query("", function(err,rows){
             const credit = rows[0].credit;
             if(credit < 0){
@@ -123,6 +127,7 @@ router.get("/chatGPT",function(req,res){
                 res.send("포인트가 부족합니다.");
             }
         })
+        */
     }
     else{
         res.send(NULL);
