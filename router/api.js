@@ -107,6 +107,7 @@ router.post("/chatGPT",function(req,res){
     //권한이 있을 때
     if(req.user && req.isAuthenticated()){
         //test 전송
+        console.log(`comment : ${comment}`);
         const res = chatGPT(comment);
         res.send({gpt : res});
 
