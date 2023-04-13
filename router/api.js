@@ -95,7 +95,7 @@ router.get("/board/list/best",function(req,res){
         res.send(rows);
         //게시글 목록 전송
     });
-})아
+})  
 
 const cost = 10;        //chatGPT 이용 cost
 
@@ -107,7 +107,8 @@ router.post("/chatGPT",function(req,res){
     //권한이 있을 때
     if(req.user && req.isAuthenticated()){
         //test 전송
-        res.send({gpt : chatGPT(comment)});
+        const res = chatGPT(comment);
+        res.send({gpt : res});
 
         //포인트 확인
         /*
