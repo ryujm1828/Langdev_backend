@@ -120,7 +120,7 @@ router.get("/comment/:id",function(req,res){
 
 //댓글 목록 가져오기
 router.get("/comment/list/:postId",function(req,res){
-    const params = [req.params.boardid];
+    const params = [req.params.postid];
     db.query(`SELECT * FROM COMMENT WHERE postId = ?`,params,function(err,rows){
       if(err) console.log(err);
       else if(rows.length == 0){
