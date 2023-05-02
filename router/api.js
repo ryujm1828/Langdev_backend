@@ -117,12 +117,12 @@ router.get("/comment/list/:boardid",function(req,res){
 router.get("/board/list/best",function(req,res){
     const tab = req.query.tab;
     let page = 1;//req.query.page;
-    const boardnum = 20;    //불러올 게시글 개수
+    const postnum = 20;    //불러올 게시글 개수
     page = Number(page);
     if(page < 1){
         page = 1;
     }
-    const params = [page-1,boardnum];
+    const params = [page-1,postnum];
     db.query(`SELECT Title, POSTID, authorid,tab,category,isBest,good,bad FROM POST WHERE isBest = true ORDER BY POSTID DESC LIMIT ?,?`,params,function(err,rows){
         console.log(rows);
         res.send(rows);
