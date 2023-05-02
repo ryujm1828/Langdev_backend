@@ -56,9 +56,8 @@ router.post("/post/:board/update_process",function (req, res) {
 });
 
 //write
-router.post("/comment/:postid/write_process", function (req, res,next) {
+router.post("/comment/:postId/write_process", function (req, res,next) {
   const ip = requestIp.getClientIp(req);
-  const title = cleanxss(req.body.title);
   const content = cleanxss(req.body.content);
   console.log(`title : ${title} content : ${content} user : ${req.user}`);
   //title,content
@@ -68,13 +67,13 @@ router.post("/comment/:postid/write_process", function (req, res,next) {
     //res.status(404).send('not found');
   } else {
       //글 작성
-      const params = [title, content, req.user,'TABS',req.params.board];
+      const params = [req.params.postId,req.user,content];
       let insertid;
       db.query(`INSERT 
       INTO
-      COMMENT(title, content, authorId, tab, category, postDate, editDate)
+      COMMENT(postId, userId, comment, postDate, editDate)
       VALUES
-      (?,?,?,?,?,NOW(),NOW());`,params,
+      (?,?,?,NOW(),NOW());`,params,
       function(err,rows,fields){
           if(err) console.log(err);
           insertid = rows.insertId;
@@ -82,7 +81,7 @@ router.post("/comment/:postid/write_process", function (req, res,next) {
       });
     //글쓰기
   }
-  res.redirect(`/${req.params.board}`);
+  res.redirect(`/${req.params.board}/${req.params.postId}`);
 });
 
 //update

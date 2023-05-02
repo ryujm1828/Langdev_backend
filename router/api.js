@@ -60,6 +60,7 @@ router.get("/post/:id",function(req,res){
         res.status(404).send('not found');
       }
       else{
+        console.log(rows);
         res.send(rows[0]);
       }
     })
@@ -73,7 +74,7 @@ router.get("/board/list/all",function(req,res){
         page = 1;
     }
     const params = [page-1,postnum];
-    db.query(`SELECT title, content, postId, authorid, tab, category, isBest FROM POST ORDER BY POSTID DESC LIMIT ?,?`,params, function(err,rows){
+    db.query(`SELECT title, content, postId, authorid, tab, category, isBest FROM POST ORDER BY postId DESC LIMIT ?,?`,params, function(err,rows){
         if(err) console.log(err);
         else{
             console.log(rows);
@@ -92,7 +93,7 @@ router.get("/board/list/best",function(req,res){
         page = 1;
     }
     const params = [page-1,postnum];
-    db.query(`SELECT title, content,postId, authorid,tab,category,isBest FROM POST WHERE isBest = true ORDER BY POSTID DESC LIMIT ?,?`,params,function(err,rows){
+    db.query(`SELECT title, content,postId, authorid,tab,category,isBest FROM POST WHERE isBest = true ORDER BY postId DESC LIMIT ?,?`,params,function(err,rows){
         if(err) console.log(err);   
 
         console.log(rows);
@@ -118,15 +119,16 @@ router.get("/comment/:id",function(req,res){
 */
 
 //댓글 목록 가져오기
-router.get("/comment/list/:boardid",function(req,res){
+router.get("/comment/list/:postId",function(req,res){
     const params = [req.params.boardid];
-    db.query(`SELECT * FROM COMMENT WHERE post.postId = ?`,params,function(err,rows){
+    db.query(`SELECT * FROM COMMENT WHERE postId = ?`,params,function(err,rows){
       if(err) console.log(err);
       else if(rows.length == 0){
         res.status(404).send('not found');
       }
       else{
-        res.send(rows[0]);
+        console.log(rows);
+        res.send(rows);
       }
     })
 });
