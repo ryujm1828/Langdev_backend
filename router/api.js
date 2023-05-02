@@ -73,7 +73,7 @@ router.get("/board/list/all",function(req,res){
         page = 1;
     }
     const params = [page-1,postnum];
-    db.query(`SELECT title, content, PostId, authorid, tab, category, isBest FROM POST ORDER BY POSTID DESC LIMIT ?,?`,params, function(err,rows){
+    db.query(`SELECT title, content, postId, authorid, tab, category, isBest FROM POST ORDER BY POSTID DESC LIMIT ?,?`,params, function(err,rows){
         if(err) console.log(err);
         else{
             console.log(rows);
@@ -92,7 +92,9 @@ router.get("/board/list/best",function(req,res){
         page = 1;
     }
     const params = [page-1,postnum];
-    db.query(`SELECT Title, POSTID, authorid,tab,category,isBest FROM POST WHERE isBest = true ORDER BY POSTID DESC LIMIT ?,?`,params,function(err,rows){
+    db.query(`SELECT title, content,postId, authorid,tab,category,isBest FROM POST WHERE isBest = true ORDER BY POSTID DESC LIMIT ?,?`,params,function(err,rows){
+        if(err) console.log(err);   
+
         console.log(rows);
         res.send(rows);
         //게시글 목록 전송
