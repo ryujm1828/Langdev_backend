@@ -121,10 +121,10 @@ router.get("/comment/:id",function(req,res){
 //댓글 목록 가져오기
 router.get("/comment/list/:postId",function(req,res){
     const params = [req.params.postId];
-    db.query(`select *
-    from comment
-    inner join users
-    on comment.userId = users.ID;`,params,function(err,rows){
+    db.query(`SELECT USERS.Githubid, COMMENT.comment
+    FROM COMMENT
+    INNER JOIN USERS
+    ON COMMENT.userId = USERS.ID;`,params,function(err,rows){
       if(err) console.log(err);
       else if(rows.length == 0){
         res.status(404).send('not found');
