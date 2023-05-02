@@ -67,7 +67,7 @@ router.get("/post/:id",function(req,res){
 
 router.get("/board/list/all",function(req,res){
     let page = 1;//req.query.page;
-    const postdnum = 20;    //불러올 게시글 개수
+    const postnum = 20;    //불러올 게시글 개수
     page = Number(page);
     if(page < 1){
         page = 1;
