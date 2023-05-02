@@ -51,8 +51,8 @@ router.get('/githubid', (req,res)=>{
     }
 })
 
-//board 제목,내용 전송
-router.get("/board/post/:id",function(req,res){
+//post 제목,내용 전송
+router.get("/post/:id",function(req,res){
     const params = [req.params.id];
     db.query(`SELECT * FROM POST WHERE postId = ?`,params,function(err,rows){
       if(err) console.log(err);
@@ -66,15 +66,14 @@ router.get("/board/post/:id",function(req,res){
 })
 
 router.get("/board/list/all",function(req,res){
-    const tab = req.query.tab;
     let page = 1;//req.query.page;
-    const boardnum = 20;    //불러올 게시글 개수
+    const postdnum = 20;    //불러올 게시글 개수
     page = Number(page);
     if(page < 1){
         page = 1;
     }
-    const params = [page-1,boardnum];
-    db.query(`SELECT title, content, postid, authorid, tab, category, isBest FROM POST ORDER BY POSTID DESC LIMIT ?,?`,params, function(err,rows){
+    const params = [page-1,postnum];
+    db.query(`SELECT title, content, PostId, authorid, tab, category, isBest FROM POST ORDER BY POSTID DESC LIMIT ?,?`,params, function(err,rows){
         if(err) console.log(err);
         else{
             console.log(rows);
@@ -83,6 +82,37 @@ router.get("/board/list/all",function(req,res){
         }
     });
 })
+
+/*
+//댓글 1개 정보 가져오기
+router.get("/comment/:id",function(req,res){
+    const params = [req.params.id];
+    db.query(`SELECT * FROM COMMENT WHERE commentId = ?`,params,function(err,rows){
+      if(err) console.log(err);
+      else if(rows.length == 0){
+        res.status(404).send('not found');
+      }
+      else{
+        res.send(rows[0]);
+      }
+    })
+});
+*/
+
+//댓글 목록 가져오기
+router.get("/comment/list/:boardid",function(req,res){
+    const params = [req.params.boardid];
+    db.query(`SELECT * FROM COMMENT WHERE post.postId = ?`,params,function(err,rows){
+      if(err) console.log(err);
+      else if(rows.length == 0){
+        res.status(404).send('not found');
+      }
+      else{
+        res.send(rows[0]);
+      }
+    })
+});
+
 
 router.get("/board/list/best",function(req,res){
     const tab = req.query.tab;
@@ -98,7 +128,7 @@ router.get("/board/list/best",function(req,res){
         res.send(rows);
         //게시글 목록 전송
     });
-})  
+})
 
 const cost = 10;        //chatGPT 이용 cost
 
