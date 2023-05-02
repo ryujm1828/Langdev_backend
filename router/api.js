@@ -123,7 +123,7 @@ router.get("/board/list/best",function(req,res){
         page = 1;
     }
     const params = [page-1,boardnum];
-    db.query(`SELECT Title, POSTID, authorid,tab,category,isBest,good,bad FROM POST WHERE isBest = true ORDER BY POSTID DESC LIMIT ?,?1`,params,function(err,rows){
+    db.query(`SELECT Title, POSTID, authorid,tab,category,isBest,good,bad FROM POST WHERE isBest = true ORDER BY POSTID DESC LIMIT ?,?`,params,function(err,rows){
         console.log(rows);
         res.send(rows);
         //게시글 목록 전송
