@@ -124,7 +124,7 @@ router.get("/comment/list/:postId",function(req,res){
     db.query(`SELECT USERS.Githubid, COMMENT.comment
     FROM COMMENT
     INNER JOIN USERS
-    ON COMMENT.userId = USERS.ID;`,params,function(err,rows){
+    ON COMMENT.userId = USERS.ID`,params,function(err,rows){
       if(err) console.log(err);
       else if(rows.length == 0){
         res.status(404).send('not found');
