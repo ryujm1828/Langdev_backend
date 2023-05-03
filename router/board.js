@@ -59,11 +59,11 @@ router.post("/post/:board/update_process",function (req, res) {
 router.post("/comment/:postId/write_process", function (req, res,next) {
   const ip = requestIp.getClientIp(req);
   const content = cleanxss(req.body.content);
-  console.log(`title : ${title} content : ${content} user : ${req.user}`);
+  console.log(`content : ${content} user : ${req.user}`);
   //title,content
   //board가 없을 때 혹은 로그인이 안되어 있을 때 혹은 권한이 없을 때
-  if(board_list.includes(req.params.board) == false || !req.isAuthenticated()){
-    logger.info(`${req.method} / ip : ${ip} id : ${req.user} try post but fail $`);
+  if(!req.isAuthenticated()){
+    logger.info(`${req.method} / ip : ${ip} id : ${req.user} try comment write but fail $`);
     //res.status(404).send('not found');
   } else {
       //글 작성
@@ -87,17 +87,26 @@ router.post("/comment/:postId/write_process", function (req, res,next) {
 //update
 router.post("/comment/:postid/update_process",function (req, res) {
   const ip = requestIp.getClientIp(req);
-  const title = cleanxss(req.body.title);
   const content = cleanxss(req.body.content);
-  
-  //board가 없을 때 혹은 다른 유저 일 때
-  if(board_list.includes(req.params.board) == false || req.user != db.query("") || !req.isAuthenticated()){
-    logger.info(`${req.method} / ip : ${ip} id : ${req.user} try update but fail $`);
-    res.status(404).send('not found');
+  console.log(`content : ${content} user : ${req.user}`);
+  //title,content
+  //board가 없을 때 혹은 로그인이 안되어 있을 때 혹은 권한이 없을 때
+  if(!req.isAuthenticated()){
+    logger.info(`${req.method} / ip : ${ip} id : ${req.user} try comment update but fail $`);
+    //res.status(404).send('not found');
   } else {
-    logger.info(`${req.method} / ip : ${ip} id : ${req.user} update $ complete`);
-    //수정
+      //글 작성
+      const params = [req.params.postId,req.user,content];
+      let insertid;
+      db.query(``,params,
+      function(err,rows,fields){
+          if(err) console.log(err);
+          insertid = rows.insertId;
+          logger.info(`${req.method} / ip : ${ip} id : ${req.user} postid ${insertid} complete`);
+      });
+    //글쓰기
   }
+  res.redirect(`/${req.params.board}/${req.params.postId}`);
 });
 
 module.exports = router;

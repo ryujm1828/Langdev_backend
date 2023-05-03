@@ -136,9 +136,6 @@ router.get("/comment/list/:postId",function(req,res){
     })
 });
 
-
-
-
 const cost = 10;        //chatGPT 이용 cost
 
 //chatGPT 답변 전송
@@ -147,7 +144,7 @@ router.post("/chatGPT",function(req,res){
     const ip = requestIp.getClientIp(req);
     
     //권한이 있을 때
-    if(req.user && req.isAuthenticated()){
+    if(req.isAuthenticated()){
         //test 전송
         console.log(`comment : ${comment}`);
         chatGPT(comment,function(result){
@@ -177,7 +174,7 @@ router.post("/chatGPT",function(req,res){
         */
     }
     else{
-        res.send(null);
+        res.send({gpt : "로그인 후 이용가능합니다."});
     }
 })
 
