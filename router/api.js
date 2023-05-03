@@ -102,22 +102,6 @@ router.get("/board/list/best",function(req,res){
     });
 })
 
-/*
-//댓글 1개 정보 가져오기
-router.get("/comment/:id",function(req,res){
-    const params = [req.params.id];
-    db.query(`SELECT * FROM COMMENT WHERE commentId = ?`,params,function(err,rows){
-      if(err) console.log(err);
-      else if(rows.length == 0){
-        res.status(404).send('not found');
-      }
-      else{
-        res.send(rows[0]);
-      }
-    })
-});
-*/
-
 //댓글 목록 가져오기
 router.get("/comment/list/:postId",function(req,res){
     const params = [req.params.postId];
@@ -174,7 +158,7 @@ router.post("/chatGPT",function(req,res){
         */
     }
     else{
-        res.send({gpt : "로그인 후 이용가능합니다."});
+        res.send({gpt : "로그인 후 이용해주세요 :)"});
     }
 })
 
