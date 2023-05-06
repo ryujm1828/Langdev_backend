@@ -120,6 +120,95 @@ router.get("/comment/list/:postId",function(req,res){
     })
 });
 
+router.get("/:postID/like",function(req,res){
+    let params = [req.user,req.params.postID];
+    if(req.isAuthenticated()){
+        db.query(`SELECT * FROM LIKES WHERE authorId = ? AND postId = ? LIMIT 1`,params,function(err1,rows){ 
+            if(err1)
+                logger.error(`DB ERROR : ${err1}`);
+            console.log(rows);
+            if(rows.length == 0){
+                console.log("insettttt");
+                db.query(`INSERT
+                INTO
+                LIKES
+                (authorId, postId)
+                VALUES 
+                (?,?)
+                `,params,function(err2){
+                    if(err2)
+                        logger.error(`DB ERROR : ${err2}`);
+                    console.log("insert");
+                    db.query(`SELECT * FROM DISLIKES WHERE authorId = ? AND postId = ? LIMIT 1`,params,function(err3,rows2){
+                        if(err3)
+                            logger.error(`DB ERROR : ${err3}`);
+                        if(rows2.length == 0){
+                            db.query(`DELETE FROM DISLIKES WHERE authorId = ? AND postId = ? LIMIT 1`,params,function(err4){
+                                if(err4)
+                                    logger.error(`DB ERROR : ${err4}`);
+                            })
+                        }
+                    })
+                })
+                
+            }
+            else{
+                db.query(`DELETE FROM LIKES WHERE authorId = ? AND postId = ? LIMIT 1`,params,function(err){
+                    if(err1)
+                        logger.error(`DB ERROR : ${err1}`);
+                });
+            }
+        })
+        
+    }
+    res.status(200).send("");
+})
+
+router.get("/:postID/dislike",function(req,res){
+    let params = [req.user,req.params.postID];
+    if(req.isAuthenticated()){
+        db.query(`SELECT * FROM DISLIKES WHERE authorId = ? AND postId = ? LIMIT 1`,params,function(err1,rows){ 
+            if(err1)
+                logger.error(`DB ERROR : ${err1}`);
+            console.log(rows);
+            if(rows.length == 0){
+                console.log("insettttt");
+                db.query(`INSERT
+                INTO
+                DISLIKES
+                (authorId, postId)
+                VALUES 
+                (?,?)
+                `,params,function(err2){
+                    if(err2)
+                        logger.error(`DB ERROR : ${err2}`);
+                    console.log("insert");
+                    db.query(`SELECT * FROM LIKES WHERE authorId = ? AND postId = ? LIMIT 1`,params,function(err3,rows2){
+                        if(err3)
+                            logger.error(`DB ERROR : ${err3}`);
+                        if(rows2.length == 0){
+                            db.query(`DELETE FROM LIKES WHERE authorId = ? AND postId = ? LIMIT 1`,params,function(err4){
+                                if(err4)
+                                    logger.error(`DB ERROR : ${err4}`);
+                            })
+                        }
+                    })
+                })
+                
+            }
+            else{
+                db.query(`DELETE FROM DISLIKES WHERE authorId = ? AND postId = ? LIMIT 1`,params,function(err){
+                    if(err1)
+                        logger.error(`DB ERROR : ${err1}`);
+                });
+            }
+        })
+        
+    }
+    res.status(200).send("");
+})
+
+
 const cost = 10;        //chatGPT 이용 cost
 
 //chatGPT 답변 전송
