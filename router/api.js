@@ -60,7 +60,6 @@ router.get("/post/:id",function(req,res){
         res.status(404).send('not found');
       }
       else{
-        console.log(rows);
         res.send(rows[0]);
       }
     })
@@ -77,7 +76,6 @@ router.get("/board/list/all",function(req,res){
     db.query(`SELECT title, content, postId, authorid, tab, category, isBest FROM POST ORDER BY postId DESC LIMIT ?,?`,params, function(err,rows){
         if(err) console.log(err);
         else{
-            console.log(rows);
             res.send(rows);
             //게시글 목록 전송
         }
@@ -94,12 +92,40 @@ router.get("/board/list/best",function(req,res){
     }
     const params = [page-1,postnum];
     db.query(`SELECT title, content,postId, authorid,tab,category,isBest FROM POST WHERE isBest = true ORDER BY postId DESC LIMIT ?,?`,params,function(err,rows){
-        if(err) console.log(err);   
+        if(err) logger.error(err);   
 
-        console.log(rows);
         res.send(rows);
         //게시글 목록 전송
     });
+})
+
+router.get("/board/list/:category",function(req,res){
+    const tab = req.query.tab;
+    let page = 1;//req.query.page;
+    const postnum = 20;    //불러올 게시글 개수
+    page = Number(page);
+    if(page < 1){
+        page = 1;
+    }
+    if(!req.body.tab){
+        let params = [req.params.category,page-1,postnum];
+        db.query(`SELECT title, content,postId, authorid,tab,category,isBest FROM POST WHERE category = ? ORDER BY postId DESC LIMIT ?,?`,params,function(err,rows){
+            if(err) logger.error(err);   
+
+            res.send(rows);
+            //게시글 목록 전송
+        });
+    }
+    else{
+        let params = [req.params.category,req.body.tab,page-1,postnum];
+        db.query(`SELECT title, content,postId, authorid,tab,category,isBest FROM POST WHERE category = ? AND TAB = ? ORDER BY postId DESC LIMIT ?,?`,params,function(err,rows){
+            if(err) logger.error(err);   
+
+            res.send(rows);
+            //게시글 목록 전송
+        });
+    }
+    
 })
 
 //댓글 목록 가져오기
@@ -114,11 +140,12 @@ ON COMMENT.postId = ?`,params,function(err,rows){
         res.status(404).send('not found');
       }
       else{
-        console.log(rows);
         res.send(rows);
       }
     })
 });
+
+const bestLike = 1;
 
 router.post("/:postID/like",function(req,res){
     let params = [req.user,req.params.postID];
@@ -147,12 +174,13 @@ router.post("/:postID/like",function(req,res){
                         }
                     })
                 })
-                
             }
             else{
-                db.query(`DELETE FROM LIKES WHERE authorId = ? AND postId = ? LIMIT 1`,params,function(err){
-                    if(err1)
-                        logger.error(`DB ERROR : ${err1}`);
+                db.query(`DELETE FROM LIKES WHERE authorId = ? AND postId = ? LIMIT 1`,params,function(err2){
+                    if(err2){
+                        logger.error(`DB ERROR : ${err2}`);
+                        res.status(500);
+                    }
                 });
             }
         })
@@ -193,9 +221,12 @@ router.post("/:postID/dislike",function(req,res){
                 
             }
             else{
-                db.query(`DELETE FROM DISLIKES WHERE authorId = ? AND postId = ? LIMIT 1`,params,function(err){
-                    if(err1)
-                        logger.error(`DB ERROR : ${err1}`);
+                db.query(`DELETE FROM DISLIKES WHERE authorId = ? AND postId = ? LIMIT 1`,params,function(err2){
+                    if(err2){
+                        logger.error(`DB ERROR : ${err2}`);
+                        res.status(500);
+                    }
+                        
                 });
             }
         })
@@ -210,26 +241,39 @@ const cost = 10;        //chatGPT 이용 cost
 
 router.get("/:postID/likescount",function(req,res){
     let params = [req.params.postID];
-    db.query(`SELECT COUNT(*) AS count FROM LIKES WHERE postId = ?`,params,function(err,rows){
+    db.query(`SELECT COUNT(*) AS count FROM LIKES WHERE postId = ?`,params,function(err,likerow){
         if(err){
             logger.error(`DB ERROR : ${err}`);
             res.status(404);
         }
-        console.log(rows);
-        res.send(rows[0]);
+        db.query(`SELECT COUNT(*) AS count FROM DISLIKES WHERE postId = ?`,params,function(err,dislikerow){
+            if(err){
+                logger.error(`DB ERROR : ${err}`);
+                res.status(404);
+            }
+            //인기글
+            if(parseInt(likerow[0].count)-parseInt(dislikerow[0].count) >= bestLike){
+                db.query(`UPDATE POST SET isBest = 1 WHERE postId = ?`,params,function(err2){
+                    if(err2){
+                        logger.error(`DB Error : ${err2}`)
+                    }
+                })
+            }
+            else{
+                db.query(`UPDATE POST SET isBest = 0 WHERE postId = ?`,params,function(err2){
+                    if(err2){
+                        logger.error(`DB Error : ${err2}`)
+                    }
+                })
+            }
+            res.json({likescount : likerow[0].count,dislikescount : dislikerow[0].count});
+            console.log(dislikerow[0].count)
+        })
+        
     })
 })
 
-router.get("/:postID/dislikescount",function(req,res){
-    let params = [req.params.postID];
-    db.query(`SELECT COUNT(*) AS count FROM DISLIKES WHERE postId = ?`,params,function(err,rows){
-        if(err){
-            logger.error(`DB ERROR : ${err}`);
-            res.status(404);
-        }
-        res.send(rows[0]);
-    })
-})
+
 
 //chatGPT 답변 전송
 router.post("/chatGPT",function(req,res){
@@ -242,7 +286,7 @@ router.post("/chatGPT",function(req,res){
         console.log(`comment : ${comment}`);
         chatGPT(comment,function(result){
             console.log(`result : ${result}`);
-            res.send({gpt : result});
+            res.send({gpt : result.replace('<','&lt').replace('>','&gt')});
         });
         
         
