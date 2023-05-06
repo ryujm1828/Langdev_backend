@@ -120,15 +120,13 @@ router.get("/comment/list/:postId",function(req,res){
     })
 });
 
-router.get("/:postID/like",function(req,res){
+router.post("/:postID/like",function(req,res){
     let params = [req.user,req.params.postID];
     if(req.isAuthenticated()){
         db.query(`SELECT * FROM LIKES WHERE authorId = ? AND postId = ? LIMIT 1`,params,function(err1,rows){ 
             if(err1)
                 logger.error(`DB ERROR : ${err1}`);
-            console.log(rows);
             if(rows.length == 0){
-                console.log("insettttt");
                 db.query(`INSERT
                 INTO
                 LIKES
@@ -138,7 +136,6 @@ router.get("/:postID/like",function(req,res){
                 `,params,function(err2){
                     if(err2)
                         logger.error(`DB ERROR : ${err2}`);
-                    console.log("insert");
                     db.query(`SELECT * FROM DISLIKES WHERE authorId = ? AND postId = ? LIMIT 1`,params,function(err3,rows2){
                         if(err3)
                             logger.error(`DB ERROR : ${err3}`);
@@ -161,18 +158,18 @@ router.get("/:postID/like",function(req,res){
         })
         
     }
+    else
+        res.status(400);
     res.status(200).send("");
 })
 
-router.get("/:postID/dislike",function(req,res){
+router.post("/:postID/dislike",function(req,res){
     let params = [req.user,req.params.postID];
     if(req.isAuthenticated()){
         db.query(`SELECT * FROM DISLIKES WHERE authorId = ? AND postId = ? LIMIT 1`,params,function(err1,rows){ 
             if(err1)
                 logger.error(`DB ERROR : ${err1}`);
-            console.log(rows);
             if(rows.length == 0){
-                console.log("insettttt");
                 db.query(`INSERT
                 INTO
                 DISLIKES
@@ -182,7 +179,6 @@ router.get("/:postID/dislike",function(req,res){
                 `,params,function(err2){
                     if(err2)
                         logger.error(`DB ERROR : ${err2}`);
-                    console.log("insert");
                     db.query(`SELECT * FROM LIKES WHERE authorId = ? AND postId = ? LIMIT 1`,params,function(err3,rows2){
                         if(err3)
                             logger.error(`DB ERROR : ${err3}`);
@@ -203,13 +199,36 @@ router.get("/:postID/dislike",function(req,res){
                 });
             }
         })
-        
     }
+    else
+        res.status(400);
     res.status(200).send("");
 })
 
 
 const cost = 10;        //chatGPT 이용 cost
+
+router.get("/:postID/likescount",function(req,res){
+    let params = [req.params.postID];
+    db.query(`SELECT COUNT(*) AS count FROM LIKES WHERE postId = ?`,params,function(err,rows){
+        if(err){
+            logger.error(`DB ERROR : ${err}`);
+            res.status(404);
+        }
+        res.send(rows[0]);
+    })
+})
+
+router.get("/:postID/dislikescount",function(req,res){
+    let params = [req.params.postID];
+    db.query(`SELECT COUNT(*) AS count FROM DISLIKES WHERE postId = ?`,params,function(err,rows){
+        if(err){
+            logger.error(`DB ERROR : ${err}`);
+            res.status(404);
+        }
+        res.send(rows[0]);
+    })
+})
 
 //chatGPT 답변 전송
 router.post("/chatGPT",function(req,res){
