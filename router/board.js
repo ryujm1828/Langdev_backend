@@ -81,7 +81,8 @@ router.post("/comment/:postId/write_process", function (req, res,next) {
       });
     //글쓰기
   }
-  res.redirect(`/${req.params.board}/${req.params.postId}`);
+  console.log(req.body);
+  res.redirect(`/${req.body.board}/${req.params.postId}`);
 });
 
 //update
