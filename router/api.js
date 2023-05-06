@@ -329,13 +329,15 @@ router.post("/:postID/reportPost",function(req,res){
                             logger.error(`DB ERROR : ${err3}`);
                             res.status(404);
                         }
-                        if(countrow[0].count >= removeReport){
-                            db.query(`DELETE FROM POST WHERE postId = ? LIMIT 1;
+                        if(parseInt(countrow[0].count) >= removeReport){
+                            db.query(`DELETE FROM POST WHERE postId = ? LIMIT 1
                             `,[req.params.postID],function(err4){
                                 if(err4){
+                                
                                     logger.error(`DB ERROR : ${err4}`);
                                     res.status(404);
                                 }
+                               
                             })
                         }
                     })
