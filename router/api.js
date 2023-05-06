@@ -267,13 +267,92 @@ router.get("/:postID/likescount",function(req,res){
                 })
             }
             res.json({likescount : likerow[0].count,dislikescount : dislikerow[0].count});
-            console.log(dislikerow[0].count)
         })
         
     })
 })
 
+router.get("/:postID/likescount",function(req,res){
+    let params = [req.params.postID];
+    db.query(`SELECT COUNT(*) AS count FROM LIKES WHERE postId = ?`,params,function(err,likerow){
+        if(err){
+            logger.error(`DB ERROR : ${err}`);
+            res.status(404);
+        }
+        db.query(`SELECT COUNT(*) AS count FROM DISLIKES WHERE postId = ?`,params,function(err,dislikerow){
+            if(err){
+                logger.error(`DB ERROR : ${err}`);
+                res.status(404);
+            }
+            //인기글
+            if(parseInt(likerow[0].count)-parseInt(dislikerow[0].count) >= bestLike){
+                db.query(`UPDATE POST SET isBest = 1 WHERE postId = ?`,params,function(err2){
+                    if(err2){
+                        logger.error(`DB Error : ${err2}`)
+                    }
+                })
+            }
+            else{
+                db.query(`UPDATE POST SET isBest = 0 WHERE postId = ?`,params,function(err2){
+                    if(err2){
+                        logger.error(`DB Error : ${err2}`)
+                    }
+                })
+            }
+            res.json({likescount : likerow[0].count,dislikescount : dislikerow[0].count});
+        })
+    })
+})
 
+const removeReport = 1;
+
+router.post("/:postID/reportPost",function(req,res){
+    let params = [req.user,req.params.postID];
+    if(req.isAuthenticated()){
+        db.query(`SELECT * FROM REPORTS WHERE userId = ? AND postId = ? LIMIT 1`,params,function(err1,rows){ 
+            if(err1)
+                logger.error(`DB ERROR : ${err1}`);
+            if(rows.length == 0){
+                db.query(`INSERT
+                INTO
+                REPORTS
+                (userId, postId)
+                VALUES 
+                (?,?)
+                `,params,function(err2){
+                    if(err2){
+                        logger.error(`DB ERROR : ${err2}`);
+                        res.status(404);
+                    }
+                    db.query(`SELECT COUNT(*) AS count FROM REPORTS WHERE postId = ?`,[req.params.postID],function(err3,countrow){
+                        if(err3){
+                            logger.error(`DB ERROR : ${err3}`);
+                            res.status(404);
+                        }
+                        if(countrow[0].count >= removeReport){
+                            db.query(`DELETE FROM POST WHERE postId = ? LIMIT 1;
+                            `,[req.params.postID],function(err4){
+                                if(err4){
+                                    logger.error(`DB ERROR : ${err4}`);
+                                    res.status(404);
+                                }
+                            })
+                        }
+                    })
+                    
+                })
+                
+            }
+            else{
+                res.status(300);
+            }
+        })
+    }
+    else
+        res.status(400);
+
+    res.status(201)
+})
 
 //chatGPT 답변 전송
 router.post("/chatGPT",function(req,res){

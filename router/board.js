@@ -19,7 +19,7 @@ router.post("/post/:board/write_process", function (req, res,next) {
     //board가 없을 때 혹은 로그인이 안되어 있을 때 혹은 권한이 없을 때
     if(board_list.includes(req.params.board) == false || !req.isAuthenticated()){
       logger.info(`${req.method} / ip : ${ip} id : ${req.user} try post but fail $`);
-      //res.status(404).send('not found');
+      res.status(400);
     } else {
         //글 작성
         const params = [title, content, req.user,'TABS',req.params.board];
@@ -64,7 +64,7 @@ router.post("/comment/:postId/write_process", function (req, res,next) {
   //board가 없을 때 혹은 로그인이 안되어 있을 때 혹은 권한이 없을 때
   if(!req.isAuthenticated()){
     logger.info(`${req.method} / ip : ${ip} id : ${req.user} try comment write but fail $`);
-    //res.status(404).send('not found');
+    res.status(400);
   } else {
       //글 작성
       const params = [req.params.postId,req.user,content];
