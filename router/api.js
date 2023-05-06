@@ -139,7 +139,7 @@ router.post("/:postID/like",function(req,res){
                     db.query(`SELECT * FROM DISLIKES WHERE authorId = ? AND postId = ? LIMIT 1`,params,function(err3,rows2){
                         if(err3)
                             logger.error(`DB ERROR : ${err3}`);
-                        if(rows2.length == 0){
+                        if(rows2.length != 0){
                             db.query(`DELETE FROM DISLIKES WHERE authorId = ? AND postId = ? LIMIT 1`,params,function(err4){
                                 if(err4)
                                     logger.error(`DB ERROR : ${err4}`);
@@ -182,7 +182,7 @@ router.post("/:postID/dislike",function(req,res){
                     db.query(`SELECT * FROM LIKES WHERE authorId = ? AND postId = ? LIMIT 1`,params,function(err3,rows2){
                         if(err3)
                             logger.error(`DB ERROR : ${err3}`);
-                        if(rows2.length == 0){
+                        if(rows2.length != 0){
                             db.query(`DELETE FROM LIKES WHERE authorId = ? AND postId = ? LIMIT 1`,params,function(err4){
                                 if(err4)
                                     logger.error(`DB ERROR : ${err4}`);
