@@ -54,15 +54,18 @@ router.get('/githubid', (req,res)=>{
 //post 제목,내용 전송
 router.get("/post/:id",function(req,res){
     const params = [req.params.id];
-    db.query(`SELECT * FROM POST WHERE postId = ?`,params,function(err,rows){
-      if(err) console.log(err);
-      else if(rows.length == 0){
-        res.status(404).send('not found');
-      }
-      else{
-        res.send(rows[0]);
-      }
+    db.query(`UPDATE POST SET views = views + 1 WHERE postId = ?`,params,()=>{
+        db.query(`SELECT * FROM POST WHERE postId = ?`,params,function(err,rows){
+            if(err) console.log(err);
+            else if(rows.length == 0){
+              res.status(404).send('not found');
+            }
+            else{
+              res.send(rows[0]);
+            }
+        })
     })
+    
 })
 
 router.get("/board/list/all",function(req,res){
@@ -91,7 +94,7 @@ router.get("/board/list/best",function(req,res){
         page = 1;
     }
     const params = [page-1,postnum];
-    db.query(`SELECT title, content,postId, authorid,tab,category,isBest FROM POST WHERE isBest = true ORDER BY postId DESC LIMIT ?,?`,params,function(err,rows){
+    db.query(`SELECT title, content,postId, authorid, tab,category,isBest FROM POST WHERE isBest = true ORDER BY postId DESC LIMIT ?,?`,params,function(err,rows){
         if(err) logger.error(err);   
 
         res.send(rows);
