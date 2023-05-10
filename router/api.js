@@ -5,6 +5,39 @@ const db = require("../db/db");
 const chatGPT = require("../middle/openai");
 const logger = require('../log/logger');
 const requestIp = require("request-ip");    //get ip
+//const redisdb = require("../db/redisdb")
+
+//개인정보 동의
+router.post('/agree', (req,res)=>{
+    console.log(req.body)
+    if(!req.isAuthenticated())
+        res.redirect("/")
+    else{
+        const params = [req.user]
+        db.query("UPDATE USERS SET isagree = 1 WHERE ID = ?",params,(err)=>{
+            if(err)
+                logger.error(`DB ERROR : ${err}`)
+            res.status(200).redirect("/")
+        })
+        
+    }
+})
+
+router.get("/isagree", (req,res)=>{
+    if(!req.isAuthenticated()){
+        res.send({isagree : 1})
+    }
+    else{
+        db.query(`SELECT isAgree FROM USERS WHERE ID = ? LIMIT 1`,params, function(err,rows){
+            if(rows[0].isAgree == 0)
+              res.send({isagree : 0})
+            else
+              res.send({isagree : 1})
+              
+        })
+    }
+})
+
 
 //id 전송
 router.get('/id', (req, res) => {
@@ -367,11 +400,16 @@ router.post("/chatGPT",function(req,res){
     //권한이 있을 때
     if(req.isAuthenticated()){
         //test 전송
-        console.log(`comment : ${comment}`);
-        chatGPT(comment,function(result){
+        if(comment != ""){
+            console.log(`comment : ${comment}`);
+            chatGPT(comment,function(result){
             console.log(`result : ${result}`);
-            res.send({gpt : result.replace('<','&lt').replace('>','&gt')});
-        });
+                res.send({gpt : result.replaceAll('<','&lt;').replaceAll('>','&gt;')});
+            });
+        }
+        else{
+            res.send
+        }
         
         
         //포인트 확인

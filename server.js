@@ -17,6 +17,7 @@ const api = require("./router/api");
 const auth = require("./router/auth");
 const board = require("./router/board");
 const routing = require("./router/routing");
+
 //communication with frontend
 app.use(express.json());
 app.use(cors());
@@ -54,6 +55,7 @@ passports();
 //log
 app.use("/",function(req,res,next){
   logger.info(`${req.method} / (${requestIp.getClientIp(req)}) id : ${req.user} enter ${req.url}`);
+  
   next();
 })
 
@@ -65,7 +67,7 @@ app.use('/auth',auth);//로그인 관련 라우팅
 
 //리액트연동
 app.get("/*", function (req, res) {
-    res.sendFile(path.join(__dirname, front_path+"/index.html"));
+  res.sendFile(path.join(__dirname, front_path+"/index.html"));
 });
 
 //서버 실행
