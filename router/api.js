@@ -24,6 +24,7 @@ router.post('/agree', (req,res)=>{
 })
 
 router.get("/isagree", (req,res)=>{
+    let params = [req.user]
     if(!req.isAuthenticated()){
         res.send({isagree : 1})
     }
