@@ -13,6 +13,8 @@
 - request-ip
 - sanitize-html
 - openai
+- redis
+- connect-redis
 
 ## api
 ### /api/id
