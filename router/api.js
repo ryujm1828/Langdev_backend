@@ -5,7 +5,17 @@ const db = require("../db/db");
 const chatGPT = require("../middle/openai");
 const logger = require('../log/logger');
 const requestIp = require("request-ip");    //get ip
+const redisdb = require('../db/redisdb');
 //const redisdb = require("../db/redisdb")
+
+router.get('/redis', (req,res)=>{
+    redisdb.keys('*',(err,keys)=>{
+        console.log(keys)
+        res.send(keys)
+    })
+    
+})
+
 
 //개인정보 동의
 router.post('/agree', (req,res)=>{

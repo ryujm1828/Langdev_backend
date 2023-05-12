@@ -1,10 +1,10 @@
 require('dotenv').config();
 const express = require("express");
+const session = require("express-session");
 const app = express();
 const front_path = "../community_frontend/community_frontend/build";
 //const front_path = "./community_frontend/community_frontend/build";  //frontend path for lim
-//const MySQLStore = require('express-mysql-session')(session);    //MYSQL sessionstore
-const session = require("express-session");
+const MySQLStore = require('express-mysql-session')(session);    //MYSQL sessionstore
 const RedisStore = require("connect-redis").default
 const db = require("./db/db");                          //db
 const passports = require("./db/passports"); 
@@ -20,6 +20,7 @@ const board = require("./router/board");
 const routing = require("./router/routing");
 const redisdb = require("./db/redisdb")
 
+
 //communication with frontend
 app.use(express.json());
 app.use(cors());
@@ -29,14 +30,18 @@ app.use(express.static(path.join(__dirname, front_path)));
 
 //connect db
 db.connect();
+
 redisdb.on("connect",()=>{
   logger.info("Redis connect");
 })
 redisdb.on('error', (err) => {
-  logger.error('Redis connect Error'+err)+'\n';
+  console.log(err)
+  logger.error('Redis: ' + err)+'\n';
 });
-redisdb.connect()
 
+redisdb.connect().then()
+
+/*
 //sessionstore options
 const storeOptions = {
   host : process.env.STORE_HOST,
@@ -45,16 +50,18 @@ const storeOptions = {
   password: process.env.STORE_PASSWORD,
   database: process.env.STORE_DATABASE,
 }
-//const sessionStore = new MySQLStore(storeOptions);
-const sessionStore = new RedisStore({client: redisdb, prefix: 'session:'})
+const sessionStore = new MySQLStore(storeOptions);
+*/
+
+const sessionStore = new RedisStore({client: redisdb})
 
 //session setting
 app.use(session({
+  store: sessionStore,
   secret: "TEMPSECRET",     //secret
   resave: false,
   saveUninitialized: false,
-  cookie: {secure: false},  //정식에선 true로 바꿔야됨 (https 사용여부)
-  store: sessionStore
+  cookie: {secure: false}  //정식에선 true로 바꿔야됨 (https 사용여부)
 }));
 
 //passport initializion and connect session, connect passport
