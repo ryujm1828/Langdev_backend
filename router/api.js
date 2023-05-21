@@ -426,7 +426,10 @@ router.get("/notification/list",function(req,res){
         db.query("SELECT postId,commentId,alarmType,notificationDate FROM NOTIFICATIONS WHERE userId = ?",params,(err,rows)=>{
             if(err) logger.error(err)
             else{
-                res.send(rows);
+                if(rows.length == 0)
+                    res.send(NULL);
+                else
+                    res.send(rows);
             }
         })
     }
