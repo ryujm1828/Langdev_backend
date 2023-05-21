@@ -41,18 +41,6 @@ redisdb.on('error', (err) => {
 
 redisdb.connect().then()
 
-/*
-//sessionstore options
-const storeOptions = {
-  host : process.env.STORE_HOST,
-  port : 3306,
-  user : process.env.STORE_USER,
-  password: process.env.STORE_PASSWORD,
-  database: process.env.STORE_DATABASE,
-}
-const sessionStore = new MySQLStore(storeOptions);
-*/
-
 const sessionStore = new RedisStore({client: redisdb})
 
 //session setting

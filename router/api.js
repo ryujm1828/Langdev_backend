@@ -7,6 +7,7 @@ const logger = require('../log/logger');
 const requestIp = require("request-ip");    //get ip
 const redisdb = require('../db/redisdb');
 //const redisdb = require("../db/redisdb")
+const reportShow = 1;       //신고 헀을 때 안보이는 기준. (reportShow 이상으로 신고받으면 안보임)
 
 router.get('/redis', (req,res)=>{
     redisdb.keys('*',(err,keys)=>{
@@ -15,7 +16,6 @@ router.get('/redis', (req,res)=>{
     })
     
 })
-
 
 //개인정보 동의
 router.post('/agree', (req,res)=>{
@@ -98,7 +98,7 @@ router.get('/githubid', (req,res)=>{
 //post 제목,내용 전송
 router.get("/post/:id",function(req,res){
     const params = [req.params.id];
-    db.query(`UPDATE POST SET views = views + 1 WHERE postId = ?`,params,()=>{
+    db.query(`UPDATE POST SET views = views + 1 WHERE postId = ? AND `,params,()=>{
         db.query(`SELECT * FROM POST WHERE postId = ?`,params,function(err,rows){
             if(err) console.log(err);
             else if(rows.length == 0){
@@ -119,8 +119,19 @@ router.get("/board/list/all",function(req,res){
     if(page < 1){
         page = 1;
     }
-    const params = [page-1,postnum];
-    db.query(`SELECT title, content, postId, authorid, tab, category, isBest FROM POST ORDER BY postId DESC LIMIT ?,?`,params, function(err,rows){
+    const params = [reportShow,page-1,postnum];
+    db.query(`
+    SELECT title, content, POST.postId, authorid, tab, category, isBest
+    FROM POST
+    LEFT JOIN (
+        SELECT postId
+        FROM REPORTS
+        GROUP BY postId
+        HAVING COUNT(*) >= ?
+    ) AS filtered_reports ON POST.postId = filtered_reports.postId
+    WHERE filtered_reports.postId IS NULL
+    ORDER BY POST.postId DESC LIMIT ?,?
+   `,params, function(err,rows){
         if(err) console.log(err);
         else{
             res.send(rows);
@@ -356,10 +367,12 @@ const removeReport = 1;
 router.post("/:postID/reportPost",function(req,res){
     let params = [req.user,req.params.postID];
     if(req.isAuthenticated()){
+        //신고 이미 했는지 확인
         db.query(`SELECT * FROM REPORTS WHERE userId = ? AND postId = ? LIMIT 1`,params,function(err1,rows){ 
             if(err1)
                 logger.error(`DB ERROR : ${err1}`);
             if(rows.length == 0){
+                //신고 처리
                 db.query(`INSERT
                 INTO
                 REPORTS
@@ -371,24 +384,6 @@ router.post("/:postID/reportPost",function(req,res){
                         logger.error(`DB ERROR : ${err2}`);
                         res.status(404);
                     }
-                    db.query(`SELECT COUNT(*) AS count FROM REPORTS WHERE postId = ?`,[req.params.postID],function(err3,countrow){
-                        if(err3){
-                            logger.error(`DB ERROR : ${err3}`);
-                            res.status(404);
-                        }
-                        if(parseInt(countrow[0].count) >= removeReport){
-                            db.query(`DELETE FROM POST WHERE postId = ? LIMIT 1
-                            `,[req.params.postID],function(err4){
-                                if(err4){
-                                
-                                    logger.error(`DB ERROR : ${err4}`);
-                                    res.status(404);
-                                }
-                               
-                            })
-                        }
-                    })
-                    
                 })
                 
             }
