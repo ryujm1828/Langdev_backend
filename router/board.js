@@ -67,17 +67,29 @@ router.post("/comment/:postId/write_process", function (req, res,next) {
     res.status(400);
   } else {
       //글 작성
-      const params = [req.params.postId,req.user,content];
+      const params1 = [req.params.postId,req.user,content];
+      
       let insertid;
       db.query(`INSERT 
       INTO
       COMMENT(postId, userId, comment, postDate, editDate)
       VALUES
-      (?,?,?,NOW(),NOW());`,params,
+      (?,?,?,NOW(),NOW());`,params1,
       function(err,rows,fields){
           if(err) console.log(err);
           insertid = rows.insertId;
+          const params2 = [req.params.postId,req.params.postId,insertid,0,]
           logger.info(`${req.method} / ip : ${ip} id : ${req.user} postid ${insertid} complete`);
+          db.query(`INSERT 
+          INTO 
+          NOTIFICATIONS(userId,postId,commentId,alarmType,notificationDate)
+          VALUES
+          ((SELECT authorId FROM POST WHERE postId = ?),?,?,?,NOW())
+          `,params2,(err2,results)=>{
+            if(err2) logger.error(err2)
+            console.log(results);
+            console.log("완료")
+          })
       });
     //글쓰기
   }

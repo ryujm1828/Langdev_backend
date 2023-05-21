@@ -14,7 +14,6 @@ router.get('/redis', (req,res)=>{
         console.log(keys)
         res.send(keys)
     })
-    
 })
 
 //개인정보 동의
@@ -69,7 +68,6 @@ router.get('/nickname', (req,res)=>{
     else{
         const params = [req.user];
         db.query(`SELECT NICKNAME FROM USERS WHERE ID = ?`,params, function(err,rows){
-            
             res.send({nickname : rows[0].NICKNAME});
         });
     }
@@ -422,6 +420,18 @@ router.post("/:postID/reportPost",function(req,res){
     res.status(201)
 })
 
+router.get("/notification/list",function(req,res){
+    if(req.isAuthenticated()){
+        const params = [req.user]
+        db.query("SELECT postId,commentId,alarmType,notificationDate FROM NOTIFICATIONS WHERE userId = ?",params,(err,rows)=>{
+            if(err) logger.error(err)
+            else{
+                res.send(rows);
+            }
+        })
+    }
+})
+
 //chatGPT 답변 전송
 router.post("/chatGPT",function(req,res){
     const comment = req.body.comment;
@@ -438,7 +448,7 @@ router.post("/chatGPT",function(req,res){
             });
         }
         else{
-            res.send
+            res.send("빈칸입력은 안되오!!")
         }
         
         
