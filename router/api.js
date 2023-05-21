@@ -427,12 +427,14 @@ router.get("/notification/list",function(req,res){
             if(err) logger.error(err)
             else{
                 if(rows.length == 0)
-                    res.send(NULL);
+                    res.send(null);
                 else
                     res.send(rows);
             }
         })
     }
+    else
+        res.send(null)
 })
 
 //chatGPT 답변 전송
