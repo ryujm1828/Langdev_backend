@@ -40,6 +40,7 @@ router.get("/isagree", (req,res)=>{
     }
     else{
         db.query(`SELECT isAgree FROM USERS WHERE ID = ? LIMIT 1`,params, function(err,rows){
+            console.log(rows)
             if(rows[0].isAgree == 0)
               res.send({isagree : 0})
             else
@@ -97,18 +98,31 @@ router.get('/githubid', (req,res)=>{
 
 //post 제목,내용 전송
 router.get("/post/:id",function(req,res){
-    const params = [req.params.id];
-    db.query(`UPDATE POST SET views = views + 1 WHERE postId = ? AND `,params,()=>{
-        db.query(`SELECT * FROM POST WHERE postId = ?`,params,function(err,rows){
-            if(err) console.log(err);
-            else if(rows.length == 0){
-              res.status(404).send('not found');
-            }
-            else{
-              res.send(rows[0]);
+    const params = [reportShow,req.params.id];
+    db.query(`SELECT *
+    FROM POST 
+    LEFT JOIN (
+        SELECT postId
+        FROM REPORTS
+        GROUP BY postId
+        HAVING COUNT(*) >= ?
+    ) AS filtered_reports ON POST.postId = filtered_reports.postId
+    WHERE filtered_reports.postId IS NULL AND POST.postId = ?`,params,function(err,rows){
+        if(err) logger.error(err);
+        else if(rows.length == 0){
+            res.status(404).send('not found');
+        }
+        else{
+            console.log(rows)
+            res.send(rows[0]);
+            db.query(`UPDATE POST SET views = views + 1 WHERE postId = ?`,params,(err1)=>{
+            if(err1){
+                logger.error(err1)
             }
         })
+        }
     })
+    
     
 })
 
@@ -148,8 +162,18 @@ router.get("/board/list/best",function(req,res){
     if(page < 1){
         page = 1;
     }
-    const params = [page-1,postnum];
-    db.query(`SELECT title, content,postId, authorid, tab,category,isBest FROM POST WHERE isBest = true ORDER BY postId DESC LIMIT ?,?`,params,function(err,rows){
+    const params = [reportShow, page-1,postnum];
+    db.query(`SELECT title, content, POST.postId, authorid, tab,category,isBest 
+    FROM POST 
+    LEFT JOIN (
+        SELECT postId
+        FROM REPORTS
+        GROUP BY postId
+        HAVING COUNT(*) >= ?
+    ) AS filtered_reports ON POST.postId = filtered_reports.postId
+    WHERE filtered_reports.postId IS NULL AND Post.isBest = true
+    ORDER BY POST.postId DESC LIMIT ?,?
+    `,params,function(err,rows){
         if(err) logger.error(err);   
 
         res.send(rows);
