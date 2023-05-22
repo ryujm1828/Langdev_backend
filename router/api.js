@@ -458,6 +458,40 @@ router.get("/notification/list",function(req,res){
         res.send(null)
 })
 
+router.get("/notification/list",function(req,res){
+    if(req.isAuthenticated()){
+        const params = [req.user]
+        db.query("SELECT postId,commentId,alarmType,notificationDate FROM NOTIFICATIONS WHERE userId = ?",params,(err,rows)=>{
+            if(err) logger.error(err)
+            else{
+                if(rows.length == 0)
+                    res.send(null);
+                else
+                    res.send(rows);
+            }
+        })
+    }
+    else
+        res.send(null)
+})
+
+router.delete("/notification/deleteAll",function(req,res){
+    if(req.isAuthenticated()){
+        const params = [req.user]
+        db.query(`DELETE FROM NOTIFICATIONS WHERE userId = ?`,params,(err)=>{
+            if(err){
+                logger.error(err)
+                res.status(404)
+            }
+            else{
+                res.status(200)
+            }
+        })
+    }
+    else
+        res.send(null)
+})
+
 //chatGPT 답변 전송
 router.post("/chatGPT",function(req,res){
     const comment = req.body.comment;
