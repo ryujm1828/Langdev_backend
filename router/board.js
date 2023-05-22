@@ -17,7 +17,7 @@ router.post("/post/:board/write_process", function (req, res,next) {
     console.log(`title : ${title} content : ${content} user : ${req.user}`);
     //title,content
     //board가 없을 때 혹은 로그인이 안되어 있을 때 혹은 권한이 없을 때
-    if(board_list.includes(req.params.board) == false || !req.isAuthenticated()){
+    if(board_list.includes(req.params.board) == false || !req.isAuthenticated()  || content == null || content == '' || content == undefined || title == null || title == '' || title == undefined){
       logger.info(`${req.method} / ip : ${ip} id : ${req.user} try post but fail $`);
       res.status(400);
     } else {
@@ -62,7 +62,7 @@ router.post("/comment/:postId/write_process", function (req, res,next) {
   console.log(`content : ${content} user : ${req.user}`);
   //title,content
   //board가 없을 때 혹은 로그인이 안되어 있을 때 혹은 권한이 없을 때
-  if(!req.isAuthenticated()){
+  if(!req.isAuthenticated() || content == null || content == '' || content == undefined){
     logger.info(`${req.method} / ip : ${ip} id : ${req.user} try comment write but fail $`);
     res.status(400);
   } else {
