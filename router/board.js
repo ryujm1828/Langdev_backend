@@ -78,7 +78,7 @@ router.post("/comment/:postId/write_process", function (req, res,next) {
       function(err,rows,fields){
           if(err) console.log(err);
           insertid = rows.insertId;
-          const params2 = [req.params.postId,req.params.postId,insertid,0,]
+          const params2 = [req.params.postId,req.params.postId,insertid,0]
           logger.info(`${req.method} / ip : ${ip} id : ${req.user} postid ${insertid} complete`);
           db.query(`INSERT 
           INTO 
@@ -87,8 +87,6 @@ router.post("/comment/:postId/write_process", function (req, res,next) {
           ((SELECT authorId FROM POST WHERE postId = ?),?,?,?,NOW())
           `,params2,(err2,results)=>{
             if(err2) logger.error(err2)
-            console.log(results);
-            console.log("완료")
           })
       });
     //글쓰기

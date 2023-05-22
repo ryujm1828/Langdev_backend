@@ -319,34 +319,55 @@ router.post("/:postID/dislike",function(req,res){
 
 const cost = 10;        //chatGPT 이용 cost
 
-router.get("/:postID/likescount",function(req,res){
-    let params = [req.params.postID];
+router.get("/:postId/likescount",function(req,res){
+    let params = [req.params.postId];
     db.query(`SELECT COUNT(*) AS count FROM LIKES WHERE postId = ?`,params,function(err,likerow){
         if(err){
             logger.error(`DB ERROR : ${err}`);
             res.status(404);
         }
-        db.query(`SELECT COUNT(*) AS count FROM DISLIKES WHERE postId = ?`,params,function(err,dislikerow){
-            if(err){
-                logger.error(`DB ERROR : ${err}`);
+        db.query(`SELECT COUNT(*) AS count FROM DISLIKES WHERE postId = ?`,params,function(err2,dislikerow){
+            if(err2){
+                logger.error(`DB ERROR : ${err2}`);
                 res.status(404);
             }
             //인기글
-            if(parseInt(likerow[0].count)-parseInt(dislikerow[0].count) >= bestLike){
-                db.query(`UPDATE POST SET isBest = 1 WHERE postId = ?`,params,function(err2){
-                    if(err2){
-                        logger.error(`DB Error : ${err2}`)
+            db.query(`SELECT isBest FROM POST WHERE postId = ? LIMIT 1`,params,(err3,rows)=>{
+                if(err3){
+                    logger.error(err3);
+                    res.status(404);
+                }
+                else if(rows.length == 0)
+                    res.status(404)
+                else{
+                    if(parseInt(likerow[0].count)-parseInt(dislikerow[0].count) >= bestLike && rows[0].isBest == 0){
+                        db.query(`UPDATE POST SET isBest = 1 WHERE postId = ?`,params,function(err4){
+                            if(err4){
+                                logger.error(`DB Error : ${err4}`)
+                            }
+                            const params2 = [req.params.postId,req.params.postId,null,2]
+                            db.query(`INSERT 
+                                INTO 
+                                NOTIFICATIONS(userId,postId,commentId,alarmType,notificationDate)
+                                VALUES
+                                ((SELECT authorId FROM POST WHERE postId = ?),?,?,?,NOW())
+                                `,params2,(err5,results)=>{
+                                    if(err5) logger.error(err5)
+                                })
+                        })
                     }
-                })
-            }
-            else{
-                db.query(`UPDATE POST SET isBest = 0 WHERE postId = ?`,params,function(err2){
-                    if(err2){
-                        logger.error(`DB Error : ${err2}`)
+                    else if(parseInt(likerow[0].count)-parseInt(dislikerow[0].count) < bestLike && rows[0].isBest == 1){
+                        db.query(`UPDATE POST SET isBest = 0 WHERE postId = ?`,params,function(err4){
+                            if(err4){
+                                logger.error(`DB Error : ${err4}`)
+                            }
+                        })
                     }
-                })
-            }
-            res.json({likescount : likerow[0].count,dislikescount : dislikerow[0].count});
+                    res.json({likescount : likerow[0].count,dislikescount : dislikerow[0].count});
+                }
+                
+            })
+            
         })
         
     })
