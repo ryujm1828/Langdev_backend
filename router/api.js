@@ -444,24 +444,7 @@ router.post("/:postID/reportPost",function(req,res){
 router.get("/notification/list",function(req,res){
     if(req.isAuthenticated()){
         const params = [req.user]
-        db.query("SELECT postId,commentId,alarmType,notificationDate FROM NOTIFICATIONS WHERE userId = ?",params,(err,rows)=>{
-            if(err) logger.error(err)
-            else{
-                if(rows.length == 0)
-                    res.send(null);
-                else
-                    res.send(rows);
-            }
-        })
-    }
-    else
-        res.send(null)
-})
-
-router.get("/notification/list",function(req,res){
-    if(req.isAuthenticated()){
-        const params = [req.user]
-        db.query("SELECT postId,commentId,alarmType,notificationDate FROM NOTIFICATIONS WHERE userId = ?",params,(err,rows)=>{
+        db.query("SELECT postId,commentId,alarmType,notificationDate FROM NOTIFICATIONS WHERE userId = ? ORDER BY notificationDate DESC",params,(err,rows)=>{
             if(err) logger.error(err)
             else{
                 if(rows.length == 0)
