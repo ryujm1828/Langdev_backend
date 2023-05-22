@@ -474,7 +474,7 @@ router.post("/chatGPT",function(req,res){
             });
         }
         else{
-            res.send("빈칸입력은 안되오!!")
+            res.send({gpt : "빈칸입력은 안되오"})
         }
         
         
