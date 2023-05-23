@@ -23,7 +23,7 @@ router.post('/agree', (req,res)=>{
         res.redirect("/")
     else{
         const params = [req.user]
-        db.query("UPDATE USERS SET isagree = 1 WHERE ID = ?",params,(err)=>{
+        db.query("UPDATE USERS SET isagree = 1 WHERE numId = ?",params,(err)=>{
             if(err)
                 logger.error(`DB ERROR : ${err}`)
             res.status(200).redirect("/")
@@ -38,7 +38,7 @@ router.get("/isagree", (req,res)=>{
         res.send({isagree : 1})
     }
     else{
-        db.query(`SELECT isAgree FROM USERS WHERE ID = ? LIMIT 1`,params, function(err,rows){
+        db.query(`SELECT isAgree FROM USERS WHERE numId = ? LIMIT 1`,params, function(err,rows){
             console.log(rows)
             if(rows[0].isAgree == 0)
               res.send({isagree : 0})
@@ -67,7 +67,7 @@ router.get('/nickname', (req,res)=>{
     }
     else{
         const params = [req.user];
-        db.query(`SELECT NICKNAME FROM USERS WHERE ID = ?`,params, function(err,rows){
+        db.query(`SELECT NICKNAME FROM USERS WHERE numId = ?`,params, function(err,rows){
             res.send({nickname : rows[0].NICKNAME});
         });
     }
@@ -75,7 +75,7 @@ router.get('/nickname', (req,res)=>{
 
 router.get('/nickname/:id', (req,res)=>{
     const params = [req.params.id];
-    db.query(`SELECT NICKNAME FROM USERS WHERE ID = ?`,params, function(err,rows){
+    db.query(`SELECT NICKNAME FROM USERS WHERE numId = ?`,params, function(err,rows){
             res.send({nickname : rows[0].NICKNAME});
         });
     }
@@ -88,7 +88,7 @@ router.get('/githubid', (req,res)=>{
     }
     else{
         const params = [req.user]
-        db.query(`SELECT NICKNAME FROM USERS WHERE ID = ?`,params, function(err,rows){
+        db.query(`SELECT NICKNAME FROM USERS WHERE numId = ?`,params, function(err,rows){
         res.send({githubid : rows[0].GITHUBID});
         });
     }
@@ -228,92 +228,115 @@ ON COMMENT.postId = ?`,params,function(err,rows){
 const bestLike = 1;
 
 router.post("/:postID/like",function(req,res){
-    let params = [req.user,req.params.postID];
+    
     if(req.isAuthenticated()){
-        db.query(`SELECT * FROM LIKES WHERE authorId = ? AND postId = ? LIMIT 1`,params,function(err1,rows){ 
-            if(err1)
-                logger.error(`DB ERROR : ${err1}`);
-            if(rows.length == 0){
-                db.query(`INSERT
-                INTO
-                LIKES
-                (authorId, postId)
-                VALUES 
-                (?,?)
-                `,params,function(err2){
-                    if(err2)
-                        logger.error(`DB ERROR : ${err2}`);
-                    db.query(`SELECT * FROM DISLIKES WHERE authorId = ? AND postId = ? LIMIT 1`,params,function(err3,rows2){
-                        if(err3)
-                            logger.error(`DB ERROR : ${err3}`);
-                        if(rows2.length != 0){
-                            db.query(`DELETE FROM DISLIKES WHERE authorId = ? AND postId = ? LIMIT 1`,params,function(err4){
-                                if(err4)
-                                    logger.error(`DB ERROR : ${err4}`);
-                            })
-                        }
-                    })
-                })
+        db.query(`SELECT userId FROM USERS WHERE numId = ?`,[req.user],(err,results)=>{
+            if(err){
+                logger.error(err)
+                res.status(404);
             }
             else{
-                db.query(`DELETE FROM LIKES WHERE authorId = ? AND postId = ? LIMIT 1`,params,function(err2){
-                    if(err2){
-                        logger.error(`DB ERROR : ${err2}`);
-                        res.status(500);
+                const userId = results[0].userId
+                let params = [userId,req.params.postID];
+                db.query(`
+                SELECT *
+                FROM POST
+                WHERE authorId = ? AND postId = ? LIMIT 1;`,params,function(err1,rows){ 
+                    if(err1)
+                        logger.error(`DB ERROR : ${err1}`);
+                    if(rows.length == 0){
+                        db.query(`INSERT
+                        INTO
+                        LIKES
+                        (authorId, postId)
+                        VALUES 
+                        (?,?)
+                        `,params,function(err2){
+                            if(err2)
+                                logger.error(`DB ERROR : ${err2}`);
+                            db.query(`SELECT * FROM DISLIKES WHERE authorId = ? AND postId = ? LIMIT 1`,params,function(err3,rows2){
+                                if(err3)
+                                    logger.error(`DB ERROR : ${err3}`);
+                                if(rows2.length != 0){
+                                    db.query(`DELETE FROM DISLIKES WHERE authorId = ? AND postId = ? LIMIT 1`,params,function(err4){
+                                        if(err4)
+                                            logger.error(`DB ERROR : ${err4}`);
+                                    })
+                                }
+                            })
+                        })
                     }
-                });
+                    else{
+                        db.query(`DELETE FROM LIKES WHERE authorId = ? AND postId = ? LIMIT 1`,params,function(err2){
+                            if(err2){
+                                logger.error(`DB ERROR : ${err2}`);
+                                res.status(500);
+                            }
+                        });
+                    }
+                })
             }
+            
         })
-        
+
     }
     else
         res.status(400);
-    res.status(200).send("");
+    res.status(200);
 })
 
 router.post("/:postID/dislike",function(req,res){
-    let params = [req.user,req.params.postID];
     if(req.isAuthenticated()){
-        db.query(`SELECT * FROM DISLIKES WHERE authorId = ? AND postId = ? LIMIT 1`,params,function(err1,rows){ 
-            if(err1)
-                logger.error(`DB ERROR : ${err1}`);
-            if(rows.length == 0){
-                db.query(`INSERT
-                INTO
-                DISLIKES
-                (authorId, postId)
-                VALUES 
-                (?,?)
-                `,params,function(err2){
-                    if(err2)
-                        logger.error(`DB ERROR : ${err2}`);
-                    db.query(`SELECT * FROM LIKES WHERE authorId = ? AND postId = ? LIMIT 1`,params,function(err3,rows2){
-                        if(err3)
-                            logger.error(`DB ERROR : ${err3}`);
-                        if(rows2.length != 0){
-                            db.query(`DELETE FROM LIKES WHERE authorId = ? AND postId = ? LIMIT 1`,params,function(err4){
-                                if(err4)
-                                    logger.error(`DB ERROR : ${err4}`);
-                            })
-                        }
-                    })
-                })
-                
+        db.query(`SELECT userId FROM USERS WHERE numId = ?`,[req.user],(err,results)=>{
+            if(err){
+                logger.error(err)
+                res.status(404);
             }
             else{
-                db.query(`DELETE FROM DISLIKES WHERE authorId = ? AND postId = ? LIMIT 1`,params,function(err2){
-                    if(err2){
-                        logger.error(`DB ERROR : ${err2}`);
-                        res.status(500);
-                    }
+                const userId = results[0].userId
+                let params = [userId,req.params.postID];
+                db.query(`SELECT * FROM DISLIKES WHERE authorId = ? AND postId = ? LIMIT 1`,params,function(err1,rows){ 
+                    if(err1)
+                        logger.error(`DB ERROR : ${err1}`);
+                    if(rows.length == 0){
+                        db.query(`INSERT
+                        INTO
+                        DISLIKES
+                        (authorId, postId)
+                        VALUES 
+                        (?,?)
+                        `,params,function(err2){
+                            if(err2)
+                                logger.error(`DB ERROR : ${err2}`);
+                            db.query(`SELECT * FROM LIKES WHERE authorId = ? AND postId = ? LIMIT 1`,params,function(err3,rows2){
+                                if(err3)
+                                    logger.error(`DB ERROR : ${err3}`);
+                                if(rows2.length != 0){
+                                    db.query(`DELETE FROM LIKES WHERE authorId = ? AND postId = ? LIMIT 1`,params,function(err4){
+                                        if(err4)
+                                            logger.error(`DB ERROR : ${err4}`);
+                                    })
+                                }
+                            })
+                        })
                         
-                });
-            }
-        })
+                    }
+                    else{
+                        db.query(`DELETE FROM DISLIKES WHERE authorId = ? AND postId = ? LIMIT 1`,params,function(err2){
+                            if(err2){
+                                logger.error(`DB ERROR : ${err2}`);
+                                res.status(500);
+                            }
+                                
+                        });
+                    }
+                })
+            }} 
+        )
     }
     else
         res.status(400);
-    res.status(200).send("");
+    res.status(200);
 })
 
 
@@ -408,30 +431,36 @@ router.get("/:postID/likescount",function(req,res){
 const removeReport = 1;
 
 router.post("/:postID/reportPost",function(req,res){
-    let params = [req.user,req.params.postID];
     if(req.isAuthenticated()){
-        //신고 이미 했는지 확인
-        db.query(`SELECT * FROM REPORTS WHERE userId = ? AND postId = ? LIMIT 1`,params,function(err1,rows){ 
-            if(err1)
-                logger.error(`DB ERROR : ${err1}`);
-            if(rows.length == 0){
-                //신고 처리
-                db.query(`INSERT
-                INTO
-                REPORTS
-                (userId, postId)
-                VALUES 
-                (?,?)
-                `,params,function(err2){
-                    if(err2){
-                        logger.error(`DB ERROR : ${err2}`);
-                        res.status(404);
+        db.query(`SELECT userId FROM USERS WHERE numId = ?`,[req.user],(err,results)=>{
+            if(err) req.status(400)
+            else{
+                const userId = results[0].userId
+                let params = [userId,req.params.postID];
+                //신고 이미 했는지 확인
+                db.query(`SELECT * FROM REPORTS WHERE userId = ? AND postId = ? LIMIT 1`,params,function(err1,rows){ 
+                    if(err1)
+                        logger.error(`DB ERROR : ${err1}`);
+                    if(rows.length == 0){
+                        //신고 처리
+                        db.query(`INSERT
+                        INTO
+                        REPORTS
+                        (userId, postId)
+                        VALUES 
+                        (?,?)
+                        `,params,function(err2){
+                            if(err2){
+                                logger.error(`DB ERROR : ${err2}`);
+                                res.status(404);
+                            }
+                        })
+                        
+                    }
+                    else{
+                        res.status(300);
                     }
                 })
-                
-            }
-            else{
-                res.status(300);
             }
         })
     }
@@ -444,7 +473,7 @@ router.post("/:postID/reportPost",function(req,res){
 router.get("/notification/list",function(req,res){
     if(req.isAuthenticated()){
         const params = [req.user]
-        db.query("SELECT postId,commentId,alarmType,notificationDate FROM NOTIFICATIONS WHERE userId = ? ORDER BY notificationDate DESC",params,(err,rows)=>{
+        db.query("SELECT postId,commentId,alarmType,notificationDate,notificationId FROM NOTIFICATIONS WHERE userNumId = ? ORDER BY notificationDate DESC",params,(err,rows)=>{
             if(err) logger.error(err)
             else{
                 if(rows.length == 0)
@@ -461,7 +490,7 @@ router.get("/notification/list",function(req,res){
 router.delete("/notification/deleteAll",function(req,res){
     if(req.isAuthenticated()){
         const params = [req.user]
-        db.query(`DELETE FROM NOTIFICATIONS WHERE userId = ?`,params,(err)=>{
+        db.query(`DELETE FROM NOTIFICATIONS WHERE userNumId = ?`,params,(err)=>{
             if(err){
                 logger.error(err)
                 res.status(404)
