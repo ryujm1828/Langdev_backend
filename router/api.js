@@ -96,7 +96,7 @@ router.get('/githubid', (req,res)=>{
 
 //post 제목,내용 전송
 router.get("/post/:id",function(req,res){
-    const params = [reportShow,req.params.id];
+    let params = [reportShow,req.params.id];
     db.query(`SELECT *
     FROM POST 
     LEFT JOIN (
@@ -111,12 +111,12 @@ router.get("/post/:id",function(req,res){
             res.status(404).send('not found');
         }
         else{
-            console.log(rows)
-            res.send(rows[0]);
+            params = [req.params.id]
             db.query(`UPDATE POST SET views = views + 1 WHERE postId = ?`,params,(err1)=>{
             if(err1){
                 logger.error(err1)
             }
+            res.send(rows[0]);
         })
         }
     })
