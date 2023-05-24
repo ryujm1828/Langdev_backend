@@ -9,6 +9,8 @@ const cleanxss = require("../middle/sanitizer");
 //const sanitizer = require("../middle/sanitizer");
 const logger = require('../log/logger');
 
+var blank_pattern = /^\s+|\s+$/g;
+
 //write
 router.post("/post/:board/write_process", function (req, res,next) {
     const ip = requestIp.getClientIp(req);
@@ -17,7 +19,7 @@ router.post("/post/:board/write_process", function (req, res,next) {
     console.log(`title : ${title} content : ${content} user : ${req.user}`);
     //title,content
     //board가 없을 때 혹은 로그인이 안되어 있을 때 혹은 권한이 없을 때
-    if(board_list.includes(req.params.board) == false || !req.isAuthenticated()  || !content || !title){
+    if(board_list.includes(req.params.board) == false || !req.isAuthenticated()  || content.replace(blank_pattern, '') == '' || title.replace(blank_pattern, '') == ''){
       logger.info(`${req.method} / ip : ${ip} id : ${req.user} try post but fail $`);
       res.status(400);
     } else {
@@ -60,9 +62,10 @@ router.post("/comment/:postId/write_process", function (req, res,next) {
   const ip = requestIp.getClientIp(req);
   const content = cleanxss(req.body.content);
   console.log(`content : ${content} user : ${req.user}`);
+  
   //title,content
   //board가 없을 때 혹은 로그인이 안되어 있을 때 혹은 권한이 없을 때
-  if(!req.isAuthenticated() || !content){
+  if(!req.isAuthenticated() || content.replace(blank_pattern, '') == ''){
     logger.info(`${req.method} / ip : ${ip} id : ${req.user} try comment write but fail $`);
     res.status(400);
   } else {

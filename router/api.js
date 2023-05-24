@@ -424,7 +424,6 @@ const removeReport = 1;
 
 router.post("/:postID/reportPost",function(req,res){
     if(req.isAuthenticated()){
-        const userId = results[0].userId
         let params = [req.user,req.params.postID];
         //신고 이미 했는지 확인
         db.query(`SELECT * FROM REPORTS WHERE userId = (SELECT userId FROM USERS WHERE numId = ?) AND postId = ? LIMIT 1`,params,function(err1,rows){ 
@@ -437,7 +436,7 @@ router.post("/:postID/reportPost",function(req,res){
                 REPORTS
                 (userId, postId)
                 VALUES 
-                (?,?)
+                ((SELECT userId FROM USERS WHERE numId = ?),?)
                 `,params,function(err2){
                     if(err2){
                         logger.error(`DB ERROR : ${err2}`);
