@@ -361,9 +361,9 @@ router.get("/:postId/likescount",function(req,res){
                             const params2 = [req.params.postId,req.params.postId,null,2]
                             db.query(`INSERT 
                                 INTO 
-                                NOTIFICATIONS(userId,postId,commentId,alarmType,notificationDate)
+                                NOTIFICATIONS(userNumId,postId,commentId,alarmType,notificationDate)
                                 VALUES
-                                ((SELECT authorId FROM POST WHERE postId = ?),?,?,?,NOW())
+                                ((SELECT numId FROM USERS WHERE userId = (SELECT authorId FROM POST WHERE postId = ?)),?,?,?,NOW())
                                 `,params2,(err5,results)=>{
                                     if(err5) logger.error(err5)
                                 })
@@ -383,38 +383,6 @@ router.get("/:postId/likescount",function(req,res){
             
         })
         
-    })
-})
-
-router.get("/:postID/likescount",function(req,res){
-    let params = [req.params.postID];
-    db.query(`SELECT COUNT(*) AS count FROM LIKES WHERE postId = ?`,params,function(err,likerow){
-        if(err){
-            logger.error(`DB ERROR : ${err}`);
-            res.status(404);
-        }
-        db.query(`SELECT COUNT(*) AS count FROM DISLIKES WHERE postId = ?`,params,function(err,dislikerow){
-            if(err){
-                logger.error(`DB ERROR : ${err}`);
-                res.status(404);
-            }
-            //인기글
-            if(parseInt(likerow[0].count)-parseInt(dislikerow[0].count) >= bestLike){
-                db.query(`UPDATE POST SET isBest = 1 WHERE postId = ?`,params,function(err2){
-                    if(err2){
-                        logger.error(`DB Error : ${err2}`)
-                    }
-                })
-            }
-            else{
-                db.query(`UPDATE POST SET isBest = 0 WHERE postId = ?`,params,function(err2){
-                    if(err2){
-                        logger.error(`DB Error : ${err2}`)
-                    }
-                })
-            }
-            res.json({likescount : likerow[0].count,dislikescount : dislikerow[0].count});
-        })
     })
 })
 
