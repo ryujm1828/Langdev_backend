@@ -15,6 +15,7 @@
 - openai
 - redis
 - connect-redis
+- socket.io
 
 ## api
 ### /api/id
