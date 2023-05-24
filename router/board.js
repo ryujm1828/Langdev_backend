@@ -28,7 +28,7 @@ router.post("/post/:board/write_process", function (req, res,next) {
         INTO
         POST(title, content, authorId, tab, category, postDate, editDate)
         VALUES
-        (?,?,?,?,?,NOW(),NOW());`,params,
+        (?,?,(SELECT userId FROM USERS WHERE numId = ? LIMIT 1),?,?,NOW(),NOW());`,params,
         function(err,rows,fields){
             if(err) console.log(err);
             insertid = rows.insertId;
@@ -74,8 +74,9 @@ router.post("/comment/:postId/write_process", function (req, res,next) {
       INTO
       COMMENT(postId, userId, comment, postDate, editDate)
       VALUES
-      (?,?,?,NOW(),NOW());`,params1,
+      (?,(SELECT userId FROM USERS WHERE numId = ? LIMIT 1),?,NOW(),NOW());`,params1,
       function(err,rows,fields){
+          console.log(rows)
           if(err) console.log(err);
           insertid = rows.insertId;
           const params2 = [req.params.postId,req.params.postId,insertid,0]
