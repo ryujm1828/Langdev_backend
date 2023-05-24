@@ -236,17 +236,17 @@ router.get("/comment/list/:postId",function(req,res){
 const bestLike = 1;
 
 router.post("/:postID/like",function(req,res){
-    
     if(req.isAuthenticated()){
-        
         const params = [req.user,req.params.postID];
         db.query(`
         SELECT *
-        FROM POST
-        WHERE authorId = (SELECT userId FROM USERS WHERE numId = ?) AND postId = ? LIMIT 1;`,params,function(err1,rows){ 
+        FROM LIKES
+        WHERE authorId = (SELECT userId FROM USERS WHERE numId = ?) AND postId = ? LIMIT 1;`,params,function(err1,rows){
+            console.log(rows)
             if(err1)
                 logger.error(`DB ERROR : ${err1}`);
             if(rows.length == 0){
+                
                 db.query(`INSERT
                         INTO
                         LIKES
@@ -285,45 +285,43 @@ router.post("/:postID/like",function(req,res){
 
 router.post("/:postID/dislike",function(req,res){
     if(req.isAuthenticated()){
-        
-                
-                let params = [req.user,req.params.postID];
-                db.query(`SELECT * FROM DISLIKES WHERE authorId = (SELECT userId FROM USERS WHERE numId = ?) AND postId = ? LIMIT 1`,params,function(err1,rows){ 
-                    if(err1)
-                        logger.error(`DB ERROR : ${err1}`);
-                    if(rows.length == 0){
-                        db.query(`INSERT
-                        INTO
-                        DISLIKES
-                        (authorId, postId)
-                        VALUES 
-                        ((SELECT userId FROM USERS WHERE numId = ?),?)
-                        `,params,function(err2){
-                            if(err2)
-                                logger.error(`DB ERROR : ${err2}`);
-                            db.query(`SELECT * FROM LIKES WHERE authorId = (SELECT userId FROM USERS WHERE numId = ?) AND postId = ? LIMIT 1`,params,function(err3,rows2){
-                                if(err3)
-                                    logger.error(`DB ERROR : ${err3}`);
-                                if(rows2.length != 0){
-                                    db.query(`DELETE FROM LIKES WHERE authorId = (SELECT userId FROM USERS WHERE numId = ?) AND postId = ? LIMIT 1`,params,function(err4){
-                                        if(err4)
-                                            logger.error(`DB ERROR : ${err4}`);
-                                    })
-                                }
+        let params = [req.user,req.params.postID];
+        db.query(`SELECT * FROM DISLIKES WHERE authorId = (SELECT userId FROM USERS WHERE numId = ?) AND postId = ? LIMIT 1`,params,function(err1,rows){ 
+            if(err1)
+                logger.error(`DB ERROR : ${err1}`);
+            if(rows.length == 0){
+                db.query(`INSERT
+                INTO
+                DISLIKES
+                (authorId, postId)
+                VALUES 
+                ((SELECT userId FROM USERS WHERE numId = ?),?)
+                `,params,function(err2){
+                    if(err2)
+                        logger.error(`DB ERROR : ${err2}`);
+                    db.query(`SELECT * FROM LIKES WHERE authorId = (SELECT userId FROM USERS WHERE numId = ?) AND postId = ? LIMIT 1`,params,function(err3,rows2){
+                        if(err3)
+                            logger.error(`DB ERROR : ${err3}`);
+                        if(rows2.length != 0){
+                            db.query(`DELETE FROM LIKES WHERE authorId = (SELECT userId FROM USERS WHERE numId = ?) AND postId = ? LIMIT 1`,params,function(err4){
+                                if(err4)
+                                    logger.error(`DB ERROR : ${err4}`);
                             })
-                        })
-                        
+                        }
+                    })
+                })
+                
+            }
+            else{
+                db.query(`DELETE FROM DISLIKES WHERE authorId = (SELECT userId FROM USERS WHERE numId = ?) AND postId = ? LIMIT 1`,params,function(err2){
+                    if(err2){
+                        logger.error(`DB ERROR : ${err2}`);
+                        res.status(500);
                     }
-                    else{
-                        db.query(`DELETE FROM DISLIKES WHERE authorId = (SELECT userId FROM USERS WHERE numId = ?) AND postId = ? LIMIT 1`,params,function(err2){
-                            if(err2){
-                                logger.error(`DB ERROR : ${err2}`);
-                                res.status(500);
-                            }
                                 
-                        });
-                    }
-                } 
+                });
+            }
+        } 
         )
     }
     else
