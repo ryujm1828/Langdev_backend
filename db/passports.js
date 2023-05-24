@@ -24,15 +24,15 @@ module.exports = () =>{
             callbackURL: process.env.GITHUB_CALLBACK_URL
         },
         function(accessToken, refreshToken, profile, done) {
-            
+            console.log("회원가입")
             //if(profile.id가 sql에 없으면 데이터 저장)
             let params = [profile.id];
-            db.query(`SELECT * from USERS where ID=? ;`,params,function(err,rows,fields){
+            db.query(`SELECT * from USERS where numID=? ;`,params,function(err,rows,fields){
                 if(rows.length === 0){
                     //유저회원가입
                     params = [profile.id,profile.username,profile.username]
                     db.query(`INSERT INTO USERS
-                    (ID, Githubid, Nickname)
+                    (numId, Githubid, Nickname)
                     VALUES(?,?,?);`,params,
                     function(err,rows,fields){
                         if(err) console.log(err);

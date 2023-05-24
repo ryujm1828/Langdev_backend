@@ -38,7 +38,8 @@ router.get("/isagree", (req,res)=>{
         res.send({isagree : 1})
     }
     else{
-        db.query(`SELECT isAgree FROM USERS WHERE numId = ? LIMIT 1`,params, function(err,rows){
+        db.query(`SELECT isAgree FROM USERS WHERE numID = ? LIMIT 1`,params, function(err,rows){
+            console.log("isagree")
             console.log(rows)
             if(rows[0].isAgree == 0)
               res.send({isagree : 0})
@@ -53,10 +54,10 @@ router.get("/isagree", (req,res)=>{
 //id 전송
 router.get('/id', (req, res) => {
     if(!req.user || !req.isAuthenticated()){
-        res.send({id : null});
+        res.send({numId : null});
     }
     else
-        res.send({id : req.user});
+        res.send({numId : req.user});
     //    res.send({id : req.user});
 });
 
@@ -67,8 +68,8 @@ router.get('/nickname', (req,res)=>{
     }
     else{
         const params = [req.user];
-        db.query(`SELECT NICKNAME FROM USERS WHERE numId = ?`,params, function(err,rows){
-            res.send({nickname : rows[0].NICKNAME});
+        db.query(`SELECT nickname FROM USERS WHERE numId = ?`,params, function(err,rows){
+            res.send({nickname : rows[0].nickname});
         });
     }
 })
@@ -98,7 +99,7 @@ router.get('/githubid', (req,res)=>{
 router.get("/post/:id",function(req,res){
     let params = [reportShow,req.params.id];
     db.query(`SELECT *
-    FROM POST 
+    FROM POST q
     LEFT JOIN (
         SELECT postId
         FROM REPORTS
