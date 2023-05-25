@@ -95,6 +95,23 @@ router.get('/githubid', (req,res)=>{
     }
 })
 
+router.post("/post/delete",function (req,res){
+    if(req.isAuthenticated()){
+        const params = [req.user,req.body.postId];
+        db.query(`DELETE FROM POST WHERE authorId = (SELECT userId FROM USERS WHERE numId = ?) AND postId = ?`,params,(err,result)=>{
+            if(err){
+                logger.error(err);
+                res.status(404);
+            }
+            else
+                res.status(200);
+        })
+    }
+    else{
+        res.status(404);
+    }
+})
+
 //post 제목,내용 전송
 router.get("/post/:id",function(req,res){
     let params = [reportShow,req.params.id];
@@ -128,8 +145,6 @@ router.get("/post/:id",function(req,res){
             })
         }
     })
-    
-    
 })
 
 router.get("/board/list/all",function(req,res){
@@ -232,6 +247,23 @@ router.get("/comment/list/:postId",function(req,res){
       }
     })
 });
+
+router.post("/comment/delete",function (req,res){
+    if(req.isAuthenticated()){
+        const params = [req.user,req.body.commentId];
+        db.query(`DELETE FROM COMMENT WHERE userId = (SELECT userId FROM USERS WHERE numId = ?) AND commentId = ? `,params,(err,result)=>{
+            if(err){
+                logger.error(err);
+                res.status(404);
+            }
+            else
+                res.status(200);
+        })
+    }
+    else{
+        res.status(404);
+    }
+})
 
 const bestLike = 1;
 
@@ -440,16 +472,17 @@ router.get("/notification/list",function(req,res){
         res.send(null)
 })
 
-router.delete("/notification/delete",function (req,res){
+router.post("/notification/delete",function (req,res){
     if(req.isAuthenticated()){
-        const params = [req.user,req.params.notificationId];
-        db.query(`DELETE FROM NOTIFICATIONS WHERE userNumId = ? AND notificationId = ? `,(err)=>{
+        const params = [req.user,req.body.notificationId];
+        db.query(`DELETE FROM NOTIFICATIONS WHERE userNumId = ? AND notificationId = ? `,params,(err,result)=>{
+
             if(err){
                 logger.error(err);
                 res.status(404);
             }
             else
-                res.status(200);
+                res.redirect("/")
         })
     }
     else{

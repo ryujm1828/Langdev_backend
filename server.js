@@ -81,3 +81,6 @@ app.listen(PORT, function(){
   logger.info(`Server listening on port ${PORT}`);
   //console.log(`Server listening on port ${PORT}`);
 })
+app.listen(5001,function(){
+  logger.info(`5001번 열기`);
+})
