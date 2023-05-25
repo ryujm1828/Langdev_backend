@@ -82,14 +82,15 @@ router.post("/comment/:postId/write_process", function (req, res,next) {
           console.log(rows)
           if(err) console.log(err);
           insertid = rows.insertId;
-          const params2 = [req.params.postId,req.params.postId,insertid,0]
+          const params2 = [req.params.postId,req.params.postId,insertid]
           logger.info(`${req.method} / ip : ${ip} id : ${req.user} postid ${insertid} complete`);
           db.query(`INSERT 
           INTO 
-          NOTIFICATIONS(userId,postId,commentId,alarmType,notificationDate)
+          NOTIFICATIONS(userNumId,postId,commentId,alarmType,notificationDate)
           VALUES
-          ((SELECT authorId FROM POST WHERE postId = ?),?,?,?,NOW())
+          ( (SELECT numId FROM USERS WHERE userId = (SELECT authorId FROM POST WHERE postId = ?)) ,?,?,0,NOW())
           `,params2,(err2,results)=>{
+            console.log(results)
             if(err2) logger.error(err2)
           })
       });
