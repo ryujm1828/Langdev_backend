@@ -444,7 +444,12 @@ router.delete("/notification/delete",function (req,res){
     if(req.isAuthenticated()){
         const params = [req.user,req.params.notificationId];
         db.query(`DELETE FROM NOTIFICATIONS WHERE userNumId = ? AND notificationId = ? `,(err)=>{
-            if(err) logger.error(err);
+            if(err){
+                logger.error(err);
+                res.status(404);
+            }
+            else
+                res.status(200);
         })
     }
     else{
