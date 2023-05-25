@@ -440,6 +440,18 @@ router.get("/notification/list",function(req,res){
         res.send(null)
 })
 
+router.delete("/notification/delete",function (req,res){
+    if(req.isAuthenticated()){
+        const params = [req.user,req.params.notificationId];
+        db.query(`DELETE FROM NOTIFICATIONS WHERE userNumId = ? AND notificationId = ? `,(err){
+            if(err) logger.error(err);
+        })
+    }
+    else{
+        res.status(404);
+    }
+})
+
 router.delete("/notification/deleteAll",function(req,res){
     if(req.isAuthenticated()){
         const params = [req.user]
