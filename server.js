@@ -18,7 +18,7 @@ const api = require("./router/api");
 const auth = require("./router/auth");
 const board = require("./router/board");
 const routing = require("./router/routing");
-const game = require("./router/game");
+//const game = require("./router/game");
 const redisdb = require("./db/redisdb")
 
 
@@ -70,7 +70,7 @@ app.use('/',board);   //게시판 관련 라우팅
 app.use('/',routing); //잡다한 것들 라우팅
 app.use('/api',api);  //api(프론트와 통신) 라우팅
 app.use('/auth',auth);//로그인 관련 라우팅
-app.use('/game',game);
+//app.use('/game',game);
 
 //리액트연동
 app.get("/*", function (req, res) {
