@@ -1,12 +1,30 @@
-const {Server} = require("socket.io");
+const express = require("express");
+const app = express();
+const httpserver = require('http').createServer(app); 
+const io = require("socket.io")(httpserver, {
+  /*
+  cors: {
+    origin: "http://localhost:5001",
+    methods: ["GET","POST"],
+  },
+  */
+})
 
-const io = new Server(server, {
-    cors: {
-        origin: "http://localhost:5000",
-        methods: ["GET","POST"],
-    },
-});
- 
+module.exports = ()=>{
+    io.on('connection', (socket)=>{
+        console.log(`User Connection: ${socket.id}`)
+        socket.on("send_message", (data)=>{
+            console.log(data);
+            console.log("ddd")
+        })
+      })
+      
+    httpserver.listen(5001);
+}
+
+
+
+/*
 
 const startx = 1024/2;
 const starty = 768/2;
@@ -43,13 +61,4 @@ function endGame(socket){
     }
     delete playerMap[socket.id];
 }
-
-
-
-io.on('connection', (socket)=>{
-    console.log(`User Connection: ${socket.id}`)
-    socket.on("send_message", (data)=>{
-        console.log(data);
-        console.log("ddd")
-    })
-})
+*/

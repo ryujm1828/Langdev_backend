@@ -2,6 +2,7 @@ require('dotenv').config();
 const express = require("express");
 const session = require("express-session");
 const app = express();
+
 const front_path = "../community_frontend/community_frontend/build";
 //const front_path = "./community_frontend/community_frontend/build";  //frontend path for lim
 const MySQLStore = require('express-mysql-session')(session);    //MYSQL sessionstore
@@ -18,8 +19,8 @@ const api = require("./router/api");
 const auth = require("./router/auth");
 const board = require("./router/board");
 const routing = require("./router/routing");
-//const game = require("./router/game");
-const redisdb = require("./db/redisdb")
+const redisdb = require("./db/redisdb");
+const game = require("./game/game")
 
 
 //communication with frontend
@@ -29,6 +30,8 @@ app.use(express.urlencoded({extended:true}));
 app.use(express.static("../"+__dirname));
 app.use(express.static(path.join(__dirname, front_path)));
 
+
+game()
 //connect db
 db.connect();
 
@@ -76,11 +79,9 @@ app.get("/*", function (req, res) {
   res.sendFile(path.join(__dirname, front_path+"/index.html"));
 });
 
+
 //서버 실행
 app.listen(PORT, function(){
   logger.info(`Server listening on port ${PORT}`);
   //console.log(`Server listening on port ${PORT}`);
-})
-app.listen(5001,function(){
-  logger.info(`5001번 열기`);
 })
