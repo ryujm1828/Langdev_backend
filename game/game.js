@@ -15,7 +15,6 @@ module.exports = ()=>{
         console.log(`User Connection: ${socket.id}`)
         socket.on("send_message", (data)=>{
             console.log(data);
-            console.log("ddd")
         })
       })
       

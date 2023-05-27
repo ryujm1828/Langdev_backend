@@ -113,7 +113,7 @@ router.post("/post/delete",function (req,res){
 })
 
 //post 제목,내용 전송
-router.get("/post/:id",function(req,res){
+router.get("/post/get/:id",function(req,res){
     let params = [reportShow,req.params.id];
     db.query(`SELECT title,content,postDate,editDate,tab,category,isBest,views,authorId
     FROM POST
@@ -121,10 +121,12 @@ router.get("/post/:id",function(req,res){
         SELECT postId
         FROM REPORTS
         GROUP BY postId
-        HAVING COUNT(*) >= 1
+        HAVING COUNT(*) >= ?
     ) AS filtered_reports ON POST.postId = filtered_reports.postId
-    WHERE filtered_reports.postId IS NULL AND POST.postId = 2`,params,function(err,rows){
+    WHERE filtered_reports.postId IS NULL AND POST.postId = ?`,params,function(err,rows){
+        
         if(err) logger.error(err);
+        
         else if(rows.length == 0){
             res.status(404).send('not found');
         }
