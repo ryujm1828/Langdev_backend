@@ -217,7 +217,8 @@ router.get("/board/list/:category",function(req,res){
         let params = [page-1,postnum];
         db.query(`SELECT title, content,postId,tab,category,isBest FROM POST WHERE category = ik ORDER BY postId DESC LIMIT ?,?`,params,function(err,rows){
             if(err) logger.error(err);   
-            
+            if(rows == undefined)
+                rows = [];
             res.send(rows);
             //게시글 목록 전송
         });
