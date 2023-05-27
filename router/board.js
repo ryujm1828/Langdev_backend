@@ -3,7 +3,7 @@ const express = require('express');
 const router = express.Router();
 const db = require("../db/db");
 const requestIp = require("request-ip");    //get ip
-const board_list = ["jayu","ik","security","board"];    //게시판 리스트
+const board_list = ["jayu","ik","security"];    //게시판 리스트
 const cleanxss = require("../middle/sanitizer");
 
 //const sanitizer = require("../middle/sanitizer");

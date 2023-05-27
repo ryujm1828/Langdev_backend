@@ -8,6 +8,7 @@ const requestIp = require("request-ip");    //get ip
 const redisdb = require('../db/redisdb');
 //const redisdb = require("../db/redisdb")
 const reportShow = 1;       //신고 헀을 때 안보이는 기준. (reportShow 이상으로 신고받으면 안보임)
+const boardList = ['ik','jayu']
 
 router.get('/redis', (req,res)=>{
     redisdb.keys('*',(err,keys)=>{
@@ -194,7 +195,7 @@ router.get("/board/list/best",function(req,res){
         GROUP BY postId
         HAVING COUNT(*) >= ?
     ) AS filtered_reports ON POST.postId = filtered_reports.postId
-    WHERE filtered_reports.postId IS NULL AND Post.isBest = true
+    WHERE filtered_reports.postId IS NULL AND Post.isBest = true AND category != 'ik'
     ORDER BY POST.postId DESC LIMIT ?,?
     `,params,function(err,rows){
         if(err) logger.error(err);   
@@ -206,29 +207,42 @@ router.get("/board/list/best",function(req,res){
 
 router.get("/board/list/:category",function(req,res){
     const tab = req.query.tab;
-    let page = 1;//req.query.page;
+    let page = 1; //req.query.page;
     const postnum = 20;    //불러올 게시글 개수
     page = Number(page);
     if(page < 1){
         page = 1;
     }
-    if(!req.body.tab){
-        let params = [req.params.category,page-1,postnum];
-        db.query(`SELECT title, content,postId, authorid,tab,category,isBest FROM POST WHERE category = ? ORDER BY postId DESC LIMIT ?,?`,params,function(err,rows){
+    if(req.params.category == 'ik'){
+        let params = [page-1,postnum];
+        db.query(`SELECT title, content,postId,tab,category,isBest FROM POST WHERE category = ik ORDER BY postId DESC LIMIT ?,?`,params,function(err,rows){
             if(err) logger.error(err);   
-
+            
             res.send(rows);
             //게시글 목록 전송
         });
     }
+    else if(boardList.includes(req.params.category)){
+        if(!tab){
+            let params = [req.params.category,page-1,postnum];
+            db.query(`SELECT title, content,postId, authorid,tab,category,isBest FROM POST WHERE category = ? ORDER BY postId DESC LIMIT ?,?`,params,function(err,rows){
+                if(err) logger.error(err);  
+                res.send(rows);
+                //게시글 목록 전송
+            });
+        }
+        else{
+            let params = [req.params.category,req.body.tab,page-1,postnum];
+            db.query(`SELECT title, content,postId, authorid,tab,category,isBest FROM POST WHERE category = ? AND TAB = ? ORDER BY postId DESC LIMIT ?,?`,params,function(err,rows){
+                if(err) logger.error(err);   
+    
+                res.send(rows);
+                //게시글 목록 전송
+            });
+        }
+    }
     else{
-        let params = [req.params.category,req.body.tab,page-1,postnum];
-        db.query(`SELECT title, content,postId, authorid,tab,category,isBest FROM POST WHERE category = ? AND TAB = ? ORDER BY postId DESC LIMIT ?,?`,params,function(err,rows){
-            if(err) logger.error(err);   
-
-            res.send(rows);
-            //게시글 목록 전송
-        });
+        res.status(404);
     }
     
 })
