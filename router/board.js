@@ -3,7 +3,7 @@ const express = require('express');
 const router = express.Router();
 const db = require("../db/db");
 const requestIp = require("request-ip");    //get ip
-const board_list = ["jayu","ik","security"];    //게시판 리스트
+const board_list = ["jayu","ik"];    //게시판 리스트
 const cleanxss = require("../middle/sanitizer");
 
 //const sanitizer = require("../middle/sanitizer");
@@ -12,25 +12,25 @@ const logger = require('../log/logger');
 var blank_pattern = /^\s+|\s+$/g;
 
 //write
-router.post("/post/:board/write_process", function (req, res,next) {
+router.post("/post/ik/write_process", function (req, res,next) {
     const ip = requestIp.getClientIp(req);
     const title = cleanxss(req.body.title);
     const content = cleanxss(req.body.content);
     console.log(`title : ${title} content : ${content} user : ${req.user}`);
     //title,content
     //board가 없을 때 혹은 로그인이 안되어 있을 때 혹은 권한이 없을 때
-    if(board_list.includes(req.params.board) == false || !req.isAuthenticated()  || content.replace(blank_pattern, '') == '' || title.replace(blank_pattern, '') == ''){
+    if(!req.isAuthenticated()  || content.replace(blank_pattern, '') == '' || title.replace(blank_pattern, '') == ''){
       logger.info(`${req.method} / ip : ${ip} id : ${req.user} try post but fail $`);
       res.status(400);
     } else {
         //글 작성
-        const params = [title, content, req.user,'TABS',req.params.board];
+        const params = [title, content, req.user];
         let insertid;
         db.query(`INSERT 
         INTO
-        POST(title, content, authorId, tab, category, postDate, editDate)
+        IKPOST(title, content, authorId, postDate, editDate)
         VALUES
-        (?,?,(SELECT userId FROM USERS WHERE numId = ? LIMIT 1),?,?,NOW(),NOW());`,params,
+        (?,?,(SELECT userId FROM USERS WHERE numId = ? LIMIT 1),NOW(),NOW());`,params,
         function(err,rows,fields){
             if(err) console.log(err);
             insertid = rows.insertId;
@@ -38,17 +38,17 @@ router.post("/post/:board/write_process", function (req, res,next) {
         });
       //글쓰기
     }
-    res.redirect(`/${req.params.board}`);
+    res.redirect(`/${req.params.category}`);
 });
   
 //update
-router.post("/post/:board/update_process",function (req, res) {
+router.post("/post/:category/update_process",function (req, res) {
     const ip = requestIp.getClientIp(req);
     const title = cleanxss(req.body.title);
     const content = cleanxss(req.body.content);
     
     //board가 없을 때 혹은 다른 유저 일 때
-    if(board_list.includes(req.params.board) == false || req.user != db.query("") || !req.isAuthenticated()){
+    if(board_list.includes(req.params.category) == false || req.user != db.query("") || !req.isAuthenticated()){
       logger.info(`${req.method} / ip : ${ip} id : ${req.user} try update but fail $`);
       res.status(404).send('not found');
     } else {
@@ -58,7 +58,7 @@ router.post("/post/:board/update_process",function (req, res) {
 });
 
 //write
-router.post("/comment/:postId/write_process", function (req, res,next) {
+router.post("/comment/:category/:postId/write_process", async function (req, res,next) {
   const ip = requestIp.getClientIp(req);
   const content = cleanxss(req.body.content);
   console.log(`content : ${content} user : ${req.user}`);

@@ -7,8 +7,14 @@ const logger = require('../log/logger');
 const requestIp = require("request-ip");    //get ip
 const redisdb = require('../db/redisdb');
 //const redisdb = require("../db/redisdb")
+const category = require('./board/category');
+const ik = require('./board/ik');
 const reportShow = 1;       //신고 헀을 때 안보이는 기준. (reportShow 이상으로 신고받으면 안보임)
-const boardList = ['ik','jayu']
+
+
+//게시판 목록
+router.use('/ik',ik);
+router.use('/:category',category);
 
 router.get('/redis', (req,res)=>{
     redisdb.keys('*',(err,keys)=>{
@@ -96,60 +102,6 @@ router.get('/githubid', (req,res)=>{
     }
 })
 
-router.post("/post/delete",function (req,res){
-    if(req.isAuthenticated()){
-        const params = [req.user,req.body.postId];
-        db.query(`DELETE FROM POST WHERE authorId = (SELECT userId FROM USERS WHERE numId = ?) AND postId = ?`,params,(err,result)=>{
-            if(err){
-                logger.error(err);
-                res.status(404);
-            }
-            else
-                res.status(200);
-        })
-    }
-    else{
-        res.status(404);
-    }
-})
-
-//post 제목,내용 전송
-router.get("/post/get/:id",function(req,res){
-    let params = [reportShow,req.params.id];
-    db.query(`SELECT title,content,postDate,editDate,tab,category,isBest,views,authorId
-    FROM POST
-    LEFT JOIN (
-        SELECT postId
-        FROM REPORTS
-        GROUP BY postId
-        HAVING COUNT(*) >= ?
-    ) AS filtered_reports ON POST.postId = filtered_reports.postId
-    WHERE filtered_reports.postId IS NULL AND POST.postId = ?`,params,function(err,rows){
-        
-        if(err) logger.error(err);
-        
-        else if(rows.length == 0){
-            res.status(404).send('not found');
-        }
-        else{
-            params = [req.params.id]
-            db.query(`UPDATE POST SET views = views + 1 WHERE postId = ?`,params,(err1)=>{
-            if(err1){
-                logger.error(err1)
-            }
-            
-            db.query(`SELECT nickname FROM USERS WHERE userId = ?`,[rows[0].authorId],(err2,nickname)=>{
-                if(err2) console.log(err2)
-                console.log(nickname);
-                rows[0].nickname = nickname[0].nickname;
-                res.send(rows[0]);
-            })
-            
-            })
-        }
-    })
-})
-
 router.get("/board/list/all",function(req,res){
     let page = 1;//req.query.page;
     const postnum = 20;    //불러올 게시글 개수
@@ -205,6 +157,26 @@ router.get("/board/list/best",function(req,res){
     });
 })
 
+router.get("/board/list/ik",function(req,res){
+    const tab = req.query.tab;
+    let page = 1; //req.query.page;
+    const postnum = 20;    //불러올 게시글 개수
+    page = Number(page);
+    if(page < 1){
+        page = 1;
+    }
+    let params = [page-1,postnum];
+    db.query(`SELECT title, content,postId,tab,category,isBest FROM IKPOST WHERE ORDER BY postId DESC LIMIT ?,?`,params,function(err,rows){
+        if(err) logger.error(err);   
+        if(rows == undefined)
+            rows = [];
+        res.send(rows);
+        //게시글 목록 전송
+    });
+    
+    
+})
+
 router.get("/board/list/:category",function(req,res){
     const tab = req.query.tab;
     let page = 1; //req.query.page;
@@ -213,17 +185,7 @@ router.get("/board/list/:category",function(req,res){
     if(page < 1){
         page = 1;
     }
-    if(req.params.category == 'ik'){
-        let params = [page-1,postnum];
-        db.query(`SELECT title, content,postId,tab,category,isBest FROM POST WHERE category = ik ORDER BY postId DESC LIMIT ?,?`,params,function(err,rows){
-            if(err) logger.error(err);   
-            if(rows == undefined)
-                rows = [];
-            res.send(rows);
-            //게시글 목록 전송
-        });
-    }
-    else if(boardList.includes(req.params.category)){
+   if(boardList.includes(req.params.category)){
         if(!tab){
             let params = [req.params.category,page-1,postnum];
             db.query(`SELECT title, content,postId, authorid,tab,category,isBest FROM POST WHERE category = ? ORDER BY postId DESC LIMIT ?,?`,params,function(err,rows){
@@ -246,247 +208,6 @@ router.get("/board/list/:category",function(req,res){
         res.status(404);
     }
     
-})
-
-//댓글 목록 가져오기
-router.get("/comment/list/:postId",function(req,res){
-    const params = [req.params.postId];
-    db.query(`SELECT USERS.Githubid, COMMENT.comment
-    FROM COMMENT
-    INNER JOIN USERS
-    ON COMMENT.postId = ?`,params,function(err,rows){
-      if(err) console.log(err);
-      else if(rows.length == 0){
-        res.status(404).send('not found');
-      }
-      else{
-        res.send(rows);
-      }
-    })
-});
-
-router.post("/comment/delete",function (req,res){
-    if(req.isAuthenticated()){
-        const params = [req.user,req.body.commentId];
-        db.query(`DELETE FROM COMMENT WHERE userId = (SELECT userId FROM USERS WHERE numId = ?) AND commentId = ? `,params,(err,result)=>{
-            if(err){
-                logger.error(err);
-                res.status(404);
-            }
-            else
-                res.status(200);
-        })
-    }
-    else{
-        res.status(404);
-    }
-})
-
-const bestLike = 1;
-
-router.post("/:postID/like",function(req,res){
-    if(req.isAuthenticated()){
-        const params = [req.user,req.params.postID];
-        db.query(`
-        SELECT *
-        FROM LIKES
-        WHERE authorId = (SELECT userId FROM USERS WHERE numId = ?) AND postId = ? LIMIT 1;`,params,function(err1,rows){
-            console.log(rows)
-            if(err1)
-                logger.error(`DB ERROR : ${err1}`);
-            if(rows.length == 0){
-                
-                db.query(`INSERT
-                        INTO
-                        LIKES
-                        (authorId, postId)
-                        VALUES 
-                        ((SELECT userId FROM USERS WHERE numId = ?),?)
-                `,params,function(err2){
-                    if(err2)
-                        logger.error(`DB ERROR : ${err2}`);
-                    db.query(`SELECT * FROM DISLIKES WHERE authorId = (SELECT userId FROM USERS WHERE numId = ?) AND postId = ? LIMIT 1`,params,function(err3,rows2){
-                        if(err3)
-                           logger.error(`DB ERROR : ${err3}`);
-                        if(rows2.length != 0){
-                            db.query(`DELETE FROM DISLIKES WHERE authorId = (SELECT userId FROM USERS WHERE numId = ?) AND postId = ? LIMIT 1`,params,function(err4){
-                                if(err4)
-                                    logger.error(`DB ERROR : ${err4}`);
-                            })
-                        }
-                    })
-                })
-            }
-            else{
-                db.query(`DELETE FROM LIKES WHERE authorId = (SELECT userId FROM USERS WHERE numId = ?) AND postId = ? LIMIT 1`,params,function(err2){
-                    if(err2){
-                        logger.error(`DB ERROR : ${err2}`);
-                        res.status(500);
-                    }
-                });
-            }
-        })
-    }
-    else
-        res.status(400);
-    res.status(200);
-})
-
-router.post("/:postID/dislike",function(req,res){
-    if(req.isAuthenticated()){
-        let params = [req.user,req.params.postID];
-        db.query(`SELECT * FROM DISLIKES WHERE authorId = (SELECT userId FROM USERS WHERE numId = ?) AND postId = ? LIMIT 1`,params,function(err1,rows){ 
-            if(err1)
-                logger.error(`DB ERROR : ${err1}`);
-            if(rows.length == 0){
-                db.query(`INSERT
-                INTO
-                DISLIKES
-                (authorId, postId)
-                VALUES 
-                ((SELECT userId FROM USERS WHERE numId = ?),?)
-                `,params,function(err2){
-                    if(err2)
-                        logger.error(`DB ERROR : ${err2}`);
-                    db.query(`SELECT * FROM LIKES WHERE authorId = (SELECT userId FROM USERS WHERE numId = ?) AND postId = ? LIMIT 1`,params,function(err3,rows2){
-                        if(err3)
-                            logger.error(`DB ERROR : ${err3}`);
-                        if(rows2.length != 0){
-                            db.query(`DELETE FROM LIKES WHERE authorId = (SELECT userId FROM USERS WHERE numId = ?) AND postId = ? LIMIT 1`,params,function(err4){
-                                if(err4)
-                                    logger.error(`DB ERROR : ${err4}`);
-                            })
-                        }
-                    })
-                })
-                
-            }
-            else{
-                db.query(`DELETE FROM DISLIKES WHERE authorId = (SELECT userId FROM USERS WHERE numId = ?) AND postId = ? LIMIT 1`,params,function(err2){
-                    if(err2){
-                        logger.error(`DB ERROR : ${err2}`);
-                        res.status(500);
-                    }
-                                
-                });
-            }
-        } 
-        )
-    }
-    else
-        res.status(400);
-    res.status(200);
-})
-
-
-const cost = 10;        //chatGPT 이용 cost
-
-router.get("/:postId/likescount",function(req,res){
-    let params = [req.params.postId];
-    db.query(`SELECT COUNT(*) AS count FROM LIKES WHERE postId = ?`,params,function(err,likerow){
-        if(err){
-            logger.error(`DB ERROR : ${err}`);
-            res.status(404);
-        }
-        db.query(`SELECT COUNT(*) AS count FROM DISLIKES WHERE postId = ?`,params,function(err2,dislikerow){
-            if(err2){
-                logger.error(`DB ERROR : ${err2}`);
-                res.status(404);
-            }
-            //인기글
-            db.query(`SELECT isBest FROM POST WHERE postId = ? LIMIT 1`,params,(err3,rows)=>{
-                if(err3){
-                    logger.error(err3);
-                    res.status(404);
-                }
-                else if(rows.length == 0)
-                    res.status(404)
-                else{
-                    if(parseInt(likerow[0].count)-parseInt(dislikerow[0].count) >= bestLike && rows[0].isBest == 0){
-                        db.query(`UPDATE POST SET isBest = 1 WHERE postId = ?`,params,function(err4){
-                            if(err4){
-                                logger.error(`DB Error : ${err4}`)
-                            }
-                            const params2 = [req.params.postId,req.params.postId,null,2]
-                            db.query(`INSERT 
-                                INTO 
-                                NOTIFICATIONS(userNumId,postId,commentId,alarmType,notificationDate)
-                                VALUES
-                                ((SELECT numId FROM USERS WHERE userId = (SELECT authorId FROM POST WHERE postId = ?)),?,?,?,NOW())
-                                `,params2,(err5,results)=>{
-                                    if(err5) logger.error(err5)
-                                })
-                        })
-                    }
-                    else if(parseInt(likerow[0].count)-parseInt(dislikerow[0].count) < bestLike && rows[0].isBest == 1){
-                        db.query(`UPDATE POST SET isBest = 0 WHERE postId = ?`,params,function(err4){
-                            if(err4){
-                                logger.error(`DB Error : ${err4}`)
-                            }
-                        })
-                    }
-                    res.json({likescount : likerow[0].count,dislikescount : dislikerow[0].count});
-                }
-                
-            })
-            
-        })
-        
-    })
-})
-
-const removeReport = 1;
-
-router.post("/:postID/reportPost",function(req,res){
-    if(req.isAuthenticated()){
-        let params = [req.user,req.params.postID];
-        //신고 이미 했는지 확인
-        db.query(`SELECT * FROM REPORTS WHERE userId = (SELECT userId FROM USERS WHERE numId = ?) AND postId = ? LIMIT 1`,params,function(err1,rows){ 
-            if(err1)
-                logger.error(`DB ERROR : ${err1}`);
-            if(rows.length == 0){
-                //신고 처리
-                db.query(`INSERT
-                INTO
-                REPORTS
-                (userId, postId)
-                VALUES 
-                ((SELECT userId FROM USERS WHERE numId = ?),?)
-                `,params,function(err2){
-                    if(err2){
-                        logger.error(`DB ERROR : ${err2}`);
-                        res.status(404);
-                    }
-                })
-                        
-            }
-            else{
-                res.status(300);
-            }
-               
-        })
-    }
-    else
-        res.status(400);
-
-    res.status(201)
-})
-
-router.get("/notification/list",function(req,res){
-    if(req.isAuthenticated()){
-        const params = [req.user]
-        db.query("SELECT postId,commentId,alarmType,notificationDate,notificationId FROM NOTIFICATIONS WHERE userNumId = ? ORDER BY notificationDate DESC",params,(err,rows)=>{
-            if(err) logger.error(err)
-            else{
-                if(rows.length == 0)
-                    res.send(null);
-                else
-                    res.send(rows);
-            }
-        })
-    }
-    else
-        res.send(null)
 })
 
 router.post("/notification/delete",function (req,res){
@@ -523,6 +244,7 @@ router.delete("/notification/deleteAll",function(req,res){
     else
         res.send(null)
 })
+
 
 //chatGPT 답변 전송
 router.post("/chatGPT",function(req,res){
