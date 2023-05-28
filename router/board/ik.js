@@ -41,9 +41,15 @@ router.post("/write",function (req,res){
         VALUES
         (?,?,(SELECT userId FROM USERS WHERE numId = ? LIMIT 1),NOW(),NOW(),?);`,params,
         function(err,rows,fields){
-            if(err) console.log(err);
-            insertid = rows.insertId;
-            logger.info(`${req.method} / ip : ${ip} id : ${req.user} postid ${insertid} complete`);
+            if(err){
+                logger.error(err)
+                res.status(404)
+            } 
+            else{
+                insertid = rows.insertId;
+                logger.info(`${req.method} / ip : ${ip} id : ${req.user} postid ${insertid} complete`);
+                res.status(200)
+            }
         });
       //글쓰기
     }

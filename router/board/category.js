@@ -21,6 +21,7 @@ router.use("/",function(req,res){
 })
 
 router.get("/list",function(req,res){
+    console.log("s")
     const tab = req.query.tab;
     let page = 1; //req.query.page;
     const postnum = 20;    //불러올 게시글 개수
@@ -73,9 +74,16 @@ router.post("/write",function (req,res){
         VALUES
         (?,?,(SELECT userId FROM USERS WHERE numId = ? LIMIT 1),NOW(),NOW(),?);`,params,
         function(err,rows,fields){
-            if(err) console.log(err);
-            insertid = rows.insertId;
-            logger.info(`${req.method} / ip : ${ip} id : ${req.user} postid ${insertid} complete`);
+            if(err){
+                logger.error(err)
+                res.status(404)
+            } 
+            else{
+                insertid = rows.insertId;
+                logger.info(`${req.method} / ip : ${ip} id : ${req.user} postid ${insertid} complete`);
+                res.status(200)
+            }
+            
         });
       //글쓰기
     }
