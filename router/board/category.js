@@ -136,15 +136,20 @@ router.get("/get/:id",function(req,res){
                 db.query(`UPDATE POST SET views = views + 1 WHERE postId = ?`,params,(err1)=>{
                 if(err1){
                     logger.error(err1)
+                    res.status(404)
                 }
-                
-                db.query(`SELECT nickname FROM USERS WHERE userId = (SELECT authorId FROM POST WHERE postId = ?)`,[rows[0].authorId],(err2,nickname)=>{
-                    if(err2) console.log(err2)
-                    console.log(nickname);
-                    rows[0].nickname = nickname[0].nickname;
-                    res.send(rows[0]);
-                })
-                
+                else{
+                    params = [req.params.id,category]
+                    db.query(`SELECT nickname FROM USERS WHERE userId = ?`,[rows[0].authorId],(err2,nickname)=>{
+                        if(err2){
+                            console.log(err2)
+                        }
+                        console.log(nickname);
+                        rows[0].nickname = nickname[0].nickname;
+                        console.log("err")
+                        res.send(rows[0]);
+                    })
+                }
                 })
             }
         })
@@ -200,18 +205,20 @@ router.post("/comment/write/:postId", async function (req, res,next) {
 
 //댓글 목록 가져오기
 router.get("/comment/list/:postId",function(req,res){
+    
     const params = [req.params.postId,category];
     db.query(`SELECT USERS.Githubid, COMMENT.comment
     FROM COMMENT
     INNER JOIN USERS
     ON COMMENT.postId = ? AND category = ?`,params,function(err,rows){
-      if(err) console.log(err);
-      else if(rows.length == 0){
-        res.status(404).send('not found');
-      }
-      else{
-        res.send(rows);
-      }
+        
+        if(err) console.log(err);
+        else if(rows.length == 0){
+            res.status(404).send('not found');
+        }
+        else{
+            res.send(rows);
+        }
     })
 });
 
@@ -333,6 +340,7 @@ const cost = 10;        //chatGPT 이용 cost
 
 router.get("/:postId/likescount",function(req,res){
     let params = [req.params.postId,category];
+    
     db.query(`SELECT COUNT(*) AS count FROM LIKES WHERE postId = ? AND category = ? `,params,function(err,likerow){
         if(err){
             logger.error(`DB ERROR : ${err}`);
@@ -375,6 +383,7 @@ router.get("/:postId/likescount",function(req,res){
                             }
                         })
                     }
+                    
                     res.json({likescount : likerow[0].count,dislikescount : dislikerow[0].count});
                 }
                 

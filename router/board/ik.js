@@ -151,7 +151,7 @@ router.post("/comment/write/:postId", async function (req, res,next) {
             INTO 
             NOTIFICATIONS(userNumId,postId,commentId,alarmType,notificationDate,category)
             VALUES
-            ((SELECT numId FROM USERS WHERE userId = (SELECT authorId FROM POST WHERE postId = ?)) ,?,?,0,NOW(),ik)
+            ((SELECT numId FROM USERS WHERE userId = (SELECT authorId FROM IKPOST WHERE postId = ?)) ,?,?,0,NOW(),ik)
             `,params2,(err2,results)=>{
               console.log(results)
               if(err2) logger.error(err2)
