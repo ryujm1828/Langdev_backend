@@ -76,7 +76,7 @@ router.post("/delete/:id",function (req,res){
 
 //post 제목,내용 전송
 router.get("/get/:id",function(req,res){
-    if(boardList.includes(req.params.category)){
+    if(categoryList.includes(req.params.category)){
         let params = [category,reportShow,req.params.id,category];
         db.query(`SELECT title,content,postDate,editDate,tab,category,isBest,views,authorId
         FROM POST
