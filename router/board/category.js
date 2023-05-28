@@ -20,6 +20,38 @@ router.use("/",function(req,res){
         res.status(404);
 })
 
+router.get("/list",function(req,res){
+    const tab = req.query.tab;
+    let page = 1; //req.query.page;
+    const postnum = 20;    //불러올 게시글 개수
+    page = Number(page);
+    if(page < 1){
+        page = 1;
+    }
+   if(boardList.includes(category)){
+        if(!tab){
+            let params = [category,page-1,postnum];
+            db.query(`SELECT title, content,postId, authorid,tab,category,isBest FROM POST WHERE category = ? ORDER BY postId DESC LIMIT ?,?`,params,function(err,rows){
+                if(err) logger.error(err);  
+                res.send(rows);
+                //게시글 목록 전송
+            });
+        }
+        else{
+            let params = [req.params.category,req.body.tab,page-1,postnum];
+            db.query(`SELECT title, content,postId, authorid,tab,category,isBest FROM POST WHERE category = ? AND TAB = ? ORDER BY postId DESC LIMIT ?,?`,params,function(err,rows){
+                if(err) logger.error(err);   
+    
+                res.send(rows);
+                //게시글 목록 전송
+            });
+        }
+    }
+    else{
+        res.status(404);
+    }
+    
+})
 
 router.post("/write",function (req,res){
     const ip = requestIp.getClientIp(req);

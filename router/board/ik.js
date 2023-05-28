@@ -4,6 +4,23 @@ const cleanxss = require("../../middle/sanitizer");
 
 var blank_pattern = /^\s+|\s+$/g;
 
+router.get("/list",function(req,res){
+    let page = 1; //req.query.page;
+    const postnum = 20;    //불러올 게시글 개수
+    page = Number(page);
+    if(page < 1){
+        page = 1;
+    }
+    let params = [page-1,postnum];
+    db.query(`SELECT title, content,postId,tab,category,isBest FROM IKPOST WHERE ORDER BY postId DESC LIMIT ?,?`,params,function(err,rows){
+        if(err) logger.error(err);   
+        if(rows == undefined)
+            rows = [];
+        res.send(rows);
+        //게시글 목록 전송
+    });
+})
+
 router.post("/write",function (req,res){
     const ip = requestIp.getClientIp(req);
     const title = cleanxss(req.body.title);

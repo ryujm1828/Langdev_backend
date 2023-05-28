@@ -157,59 +157,6 @@ router.get("/board/list/best",function(req,res){
     });
 })
 
-router.get("/board/list/ik",function(req,res){
-    const tab = req.query.tab;
-    let page = 1; //req.query.page;
-    const postnum = 20;    //불러올 게시글 개수
-    page = Number(page);
-    if(page < 1){
-        page = 1;
-    }
-    let params = [page-1,postnum];
-    db.query(`SELECT title, content,postId,tab,category,isBest FROM IKPOST WHERE ORDER BY postId DESC LIMIT ?,?`,params,function(err,rows){
-        if(err) logger.error(err);   
-        if(rows == undefined)
-            rows = [];
-        res.send(rows);
-        //게시글 목록 전송
-    });
-    
-    
-})
-
-router.get("/board/list/:category",function(req,res){
-    const tab = req.query.tab;
-    let page = 1; //req.query.page;
-    const postnum = 20;    //불러올 게시글 개수
-    page = Number(page);
-    if(page < 1){
-        page = 1;
-    }
-   if(boardList.includes(req.params.category)){
-        if(!tab){
-            let params = [req.params.category,page-1,postnum];
-            db.query(`SELECT title, content,postId, authorid,tab,category,isBest FROM POST WHERE category = ? ORDER BY postId DESC LIMIT ?,?`,params,function(err,rows){
-                if(err) logger.error(err);  
-                res.send(rows);
-                //게시글 목록 전송
-            });
-        }
-        else{
-            let params = [req.params.category,req.body.tab,page-1,postnum];
-            db.query(`SELECT title, content,postId, authorid,tab,category,isBest FROM POST WHERE category = ? AND TAB = ? ORDER BY postId DESC LIMIT ?,?`,params,function(err,rows){
-                if(err) logger.error(err);   
-    
-                res.send(rows);
-                //게시글 목록 전송
-            });
-        }
-    }
-    else{
-        res.status(404);
-    }
-    
-})
-
 router.post("/notification/delete",function (req,res){
     if(req.isAuthenticated()){
         const params = [req.user,req.body.notificationId];
