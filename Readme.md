@@ -16,6 +16,7 @@
 - redis
 - connect-redis
 - socket.io
+- node-nats-streaming
 
 ## api
 ### /api/id
