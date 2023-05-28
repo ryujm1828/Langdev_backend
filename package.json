@@ -17,6 +17,7 @@
     "express-mysql-session": "^3.0.0",
     "express-session": "^1.17.3",
     "mysql": "^2.18.1",
+    "node-nats-streaming": "^0.3.2",
     "nodemon": "^2.0.22",
     "openai": "^3.2.1",
     "passport": "^0.6.0",

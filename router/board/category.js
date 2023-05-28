@@ -3,7 +3,6 @@ const router = express.Router({mergeParams: true});
 const categoryList = ['jayu','security']
 const db = require("../../db/db");
 const requestIp = require("request-ip");    //get ip
-const board_list = ["jayu","security"];    //게시판 리스트
 const cleanxss = require("../../middle/sanitizer");
 
 //const sanitizer = require("../middle/sanitizer");
@@ -20,13 +19,6 @@ router.use("/",function(req,res){
     else
         res.status(404);
 })
-
-//write
-router.post("/post/ik/write_process", function (req, res,next) {
-    
-    res.redirect(`/${req.params.category}`);
-});
-
 
 
 router.post("/write",function (req,res){
@@ -384,3 +376,4 @@ router.post("/:postID/reportPost",function(req,res){
 
     res.status(201)
 })
+module.exports = router
