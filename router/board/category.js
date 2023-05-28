@@ -123,7 +123,7 @@ router.get("/get/:id",function(req,res){
             WHERE CATEGORY = ?
             GROUP BY postId
             HAVING COUNT(*) >= ?
-        ) AS filtered_reports ON JAYUPOST.postId = filtered_reports.postId
+        ) AS filtered_reports ON POST.postId = filtered_reports.postId
         WHERE filtered_reports.postId IS NULL AND POST.postId = ? AND POST.category = ?`,params,function(err,rows){
             
             if(err) logger.error(err);
