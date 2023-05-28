@@ -198,7 +198,7 @@ router.post("/comment/write/:postId", async function (req, res,next) {
       //글쓰기
     }
     console.log(req.body);
-    res.redirect(`/${req.body.board}/${req.params.postId}`);
+    res.redirect(`/${category}/${req.params.postId}`);
 });
   
 
