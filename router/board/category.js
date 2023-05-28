@@ -344,7 +344,7 @@ router.get("/:postId/likescount",function(req,res){
                 res.status(404);
             }
             //인기글
-            db.query(`SELECT isBest FROM POST WHERE postId = ? AND where category = ? LIMIT 1`,params,(err3,rows)=>{
+            db.query(`SELECT isBest FROM POST WHERE postId = ? AND category = ? LIMIT 1`,params,(err3,rows)=>{
                 if(err3){
                     logger.error(err3);
                     res.status(404);
