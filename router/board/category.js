@@ -146,7 +146,6 @@ router.get("/get/:id",function(req,res){
                         }
                         console.log(nickname);
                         rows[0].nickname = nickname[0].nickname;
-                        console.log("err")
                         res.send(rows[0]);
                     })
                 }
@@ -243,12 +242,13 @@ const bestLike = 1;
 
 router.post("/:postID/like",function(req,res){
     if(req.isAuthenticated()){
+        
         const params = [req.user,req.params.postID,category];
         db.query(`
         SELECT *
         FROM LIKES
         WHERE authorId = (SELECT userId FROM USERS WHERE numId = ?) AND postId = ? AND category = ? LIMIT 1;`,params,function(err1,rows){
-            console.log(rows)
+            
             if(err1)
                 logger.error(`DB ERROR : ${err1}`);
             if(rows.length == 0){
@@ -258,7 +258,7 @@ router.post("/:postID/like",function(req,res){
                         LIKES
                         (authorId, postId,category)
                         VALUES 
-                        ((SELECT userId FROM USERS WHERE numId = ?),?,category)
+                        ((SELECT userId FROM USERS WHERE numId = ?),?,?)
                 `,params,function(err2){
                     if(err2)
                         logger.error(`DB ERROR : ${err2}`);
