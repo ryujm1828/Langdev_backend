@@ -4,24 +4,24 @@ const categoryList = ['jayu','security']
 const db = require("../../db/db");
 const requestIp = require("request-ip");    //get ip
 const cleanxss = require("../../middle/sanitizer");
-
+const reportShow = 1;       //신고 헀을 때 안보이는 기준. (reportShow 이상으로 신고받으면 안보임)
 //const sanitizer = require("../middle/sanitizer");
 const logger = require('../../log/logger')
 
 var blank_pattern = /^\s+|\s+$/g;
 
-
 let category = null;
 
-router.use("/",function(req,res){
-    if(categoryList.includes(req.params.category))
+router.use("/",function(req,res,next){
+    if(categoryList.includes(req.params.category)){
         category = req.params.category;
+        next()
+    }
     else
         res.status(404);
 })
 
 router.get("/list",function(req,res){
-    console.log("s")
     const tab = req.query.tab;
     let page = 1; //req.query.page;
     const postnum = 20;    //불러올 게시글 개수
@@ -29,11 +29,15 @@ router.get("/list",function(req,res){
     if(page < 1){
         page = 1;
     }
-   if(boardList.includes(category)){
+   if(categoryList.includes(category)){
         if(!tab){
             let params = [category,page-1,postnum];
             db.query(`SELECT title, content,postId, authorid,tab,category,isBest FROM POST WHERE category = ? ORDER BY postId DESC LIMIT ?,?`,params,function(err,rows){
-                if(err) logger.error(err);  
+                if(err){
+                    logger.error(err); 
+                    res.status(404)
+                }
+                console.log(category)
                 res.send(rows);
                 //게시글 목록 전송
             });
@@ -58,6 +62,7 @@ router.post("/write",function (req,res){
     const ip = requestIp.getClientIp(req);
     const title = cleanxss(req.body.title);
     const content = cleanxss(req.body.content);
+    const tab = "tab"
     console.log(`title : ${title} content : ${content} user : ${req.user}`);
     //title,content
     //board가 없을 때 혹은 로그인이 안되어 있을 때 혹은 권한이 없을 때
@@ -66,13 +71,13 @@ router.post("/write",function (req,res){
       res.status(400);
     } else {
         //글 작성
-        const params = [title, content, req.user,category];
+        const params = [title, content, req.user,category,tab];
         let insertid;
         db.query(`INSERT 
         INTO
-        IKPOST(title, content, authorId, postDate, editDate,category)
+        POST(title, content, authorId, postDate, editDate,category,tab)
         VALUES
-        (?,?,(SELECT userId FROM USERS WHERE numId = ? LIMIT 1),NOW(),NOW(),?);`,params,
+        (?,?,(SELECT userId FROM USERS WHERE numId = ? LIMIT 1),NOW(),NOW(),?,?);`,params,
         function(err,rows,fields){
             if(err){
                 logger.error(err)

@@ -59,7 +59,6 @@ passports();
 //log
 app.use("/",function(req,res,next){
   logger.info(`${req.method} / (${requestIp.getClientIp(req)}) id : ${req.user} enter ${req.url}`);
-  
   next();
 })
 
@@ -72,7 +71,6 @@ app.use('/auth',auth);//로그인 관련 라우팅
 app.get("/*", function (req, res) {
   res.sendFile(path.join(__dirname, front_path+"/index.html"));
 });
-
 
 //서버 실행
 app.listen(PORT, function(){

@@ -1,22 +1,32 @@
 const express = require('express');
 const router = express.Router();
 const cleanxss = require("../../middle/sanitizer");
-
+const db = require("../../db/db");
+const reportShow = 1;       //신고 헀을 때 안보이는 기준. (reportShow 이상으로 신고받으면 안보임)
 var blank_pattern = /^\s+|\s+$/g;
+const requestIp = require("request-ip");    //get ip
+const logger = require('../../log/logger')
 
 router.get("/list",function(req,res){
+    console.log("ik")
     let page = 1; //req.query.page;
     const postnum = 20;    //불러올 게시글 개수
     page = Number(page);
+    
     if(page < 1){
         page = 1;
     }
+    
     let params = [page-1,postnum];
-    db.query(`SELECT title, content,postId,tab,category,isBest FROM IKPOST WHERE ORDER BY postId DESC LIMIT ?,?`,params,function(err,rows){
-        if(err) logger.error(err);   
-        if(rows == undefined)
-            rows = [];
-        res.send(rows);
+    db.query(`SELECT title, content, postId FROM IKPOST ORDER BY postId DESC LIMIT ?,?`,params,function(err,rows){
+        console.log("ik")
+        if(err){
+            logger.error(err);
+            res.status(404)
+        }    
+        else{
+            res.send(rows);
+        }
         //게시글 목록 전송
     });
 })
@@ -33,14 +43,15 @@ router.post("/write",function (req,res){
       res.status(400);
     } else {
         //글 작성
-        const params = [title, content, req.user,category];
+        const params = [title, content, req.user];
         let insertid;
         db.query(`INSERT 
         INTO
-        IKPOST(title, content, authorId, postDate, editDate,category)
+        IKPOST(title, content, authorId, postDate, editDate)
         VALUES
-        (?,?,(SELECT userId FROM USERS WHERE numId = ? LIMIT 1),NOW(),NOW(),?);`,params,
-        function(err,rows,fields){
+        (?,?,(SELECT userId FROM USERS WHERE numId = ? LIMIT 1),NOW(),NOW());`,params,
+        function(err,rows){
+            console.log(rows)
             if(err){
                 logger.error(err)
                 res.status(404)
@@ -74,45 +85,40 @@ router.post("/delete/:id",function (req,res){
 
 //post 제목,내용 전송
 router.get("/get/:id",function(req,res){
-    if(boardList.includes(req.params.category)){
-        let params = [reportShow,req.params.id,req.params.category];
-        db.query(`SELECT title,content,postDate,editDate,tab,category,isBest,views,authorId
-        FROM IKPOST
-        LEFT JOIN (
-            SELECT postId
-            FROM REPORTS
-            WHERE category = ik
-            GROUP BY postId
-            HAVING COUNT(*) >= ?
-        ) AS filtered_reports ON IKPOST.postId = filtered_reports.postId
-        WHERE filtered_reports.postId IS NULL AND IKPOST.postId = ?`,params,function(err,rows){
+    let params = [reportShow,req.params.id,req.params.category];
+    db.query(`SELECT title,content,postDate,editDate,views
+    FROM IKPOST
+    LEFT JOIN (
+        SELECT postId
+        FROM REPORTS
+        WHERE category = ik
+        GROUP BY postId
+        HAVING COUNT(*) >= ?
+    ) AS filtered_reports ON IKPOST.postId = filtered_reports.postId
+    WHERE filtered_reports.postId IS NULL AND IKPOST.postId = ?`,params,function(err,rows){
             
-            if(err) logger.error(err);
+        if(err) logger.error(err);
             
-            else if(rows.length == 0){
-                res.status(404).send('not found');
+        else if(rows.length == 0){
+            res.status(404).send('not found');
+        }
+        else{
+            params = [req.params.id]
+            db.query(`UPDATE IKPOST SET views = views + 1 WHERE postId = ?`,params,(err1)=>{
+            if(err1){
+                logger.error(err1)
             }
-            else{
-                params = [req.params.id]
-                db.query(`UPDATE IKPOST SET views = views + 1 WHERE postId = ?`,params,(err1)=>{
-                if(err1){
-                    logger.error(err1)
-                }
-                
-                db.query(`SELECT nickname FROM USERS WHERE userId = ?`,[rows[0].authorId],(err2,nickname)=>{
-                    if(err2) console.log(err2)
-                    console.log(nickname);
-                    rows[0].nickname = nickname[0].nickname;
-                    res.send(rows[0]);
-                })
-                
-                })
-            }
-        })
-    }
-    else{
-        res.status(404)
-    }
+            
+            db.query(`SELECT nickname FROM USERS WHERE userId = ?`,[rows[0].authorId],(err2,nickname)=>{
+                if(err2) console.log(err2)
+                console.log(nickname);
+                rows[0].nickname = nickname[0].nickname;
+                res.send(rows[0]);
+            })
+            
+            })
+        }
+    })
 })
 
 router.post("/comment/write/:postId", async function (req, res,next) {
@@ -139,7 +145,7 @@ router.post("/comment/write/:postId", async function (req, res,next) {
             console.log(rows)
             if(err) console.log(err);
             insertid = rows.insertId;
-            const params2 = [req.params.postId,req.params.postId,insertid,category]
+            const params2 = [req.params.postId,req.params.postId,insertid]
             logger.info(`${req.method} / ip : ${ip} id : ${req.user} postid ${insertid} complete`);
             db.query(`INSERT 
             INTO 
