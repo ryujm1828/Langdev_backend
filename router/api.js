@@ -105,7 +105,7 @@ router.get("/notification/list",function(req,res){
     console.log("dd")
     if(req.isAuthenticated()){
         const params = [req.user]
-        db.query("SELECT postId,commentId,alarmType,notificationDate FROM NOTIFICATIONS WHERE userId = ?",params,(err,rows)=>{
+        db.query("SELECT postId,commentId,alarmType,notificationDate FROM NOTIFICATIONS WHERE userNumId = ?",params,(err,rows)=>{
             if(err) logger.error(err)
             else{
                 res.send(rows);
