@@ -138,7 +138,7 @@ router.get("/get/:id",function(req,res){
                     logger.error(err1)
                 }
                 
-                db.query(`SELECT nickname FROM USERS WHERE userId = ?`,[rows[0].authorId],(err2,nickname)=>{
+                db.query(`SELECT nickname FROM USERS WHERE userId = (SELECT authorId FROM POST WHERE postId = ?)`,[rows[0].authorId],(err2,nickname)=>{
                     if(err2) console.log(err2)
                     console.log(nickname);
                     rows[0].nickname = nickname[0].nickname;
