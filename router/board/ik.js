@@ -18,7 +18,7 @@ router.get("/list",function(req,res){
     }
     
     let params = [page-1,postnum];
-    db.query(`SELECT title, content, postId FROM IKPOST ORDER BY postId DESC LIMIT ?,?`,params,function(err,rows){
+    db.query(`SELECT title, content, postId FROM IKPOST ORDER BY postDate DESC LIMIT ?,?`,params,function(err,rows){
         console.log("ik")
         if(err){
             logger.error(err);
@@ -85,20 +85,22 @@ router.post("/delete/:id",function (req,res){
 
 //post 제목,내용 전송
 router.get("/get/:id",function(req,res){
-    let params = [reportShow,req.params.id,req.params.category];
+    let params = [reportShow,req.params.id];
     db.query(`SELECT title,content,postDate,editDate,views
     FROM IKPOST
     LEFT JOIN (
         SELECT postId
         FROM REPORTS
-        WHERE category = ik
+        WHERE category = 'ik'
         GROUP BY postId
         HAVING COUNT(*) >= ?
     ) AS filtered_reports ON IKPOST.postId = filtered_reports.postId
     WHERE filtered_reports.postId IS NULL AND IKPOST.postId = ?`,params,function(err,rows){
             
-        if(err) logger.error(err);
-            
+        if(err){
+            logger.error(err);
+            res.status(404)
+        }
         else if(rows.length == 0){
             res.status(404).send('not found');
         }
@@ -107,15 +109,12 @@ router.get("/get/:id",function(req,res){
             db.query(`UPDATE IKPOST SET views = views + 1 WHERE postId = ?`,params,(err1)=>{
             if(err1){
                 logger.error(err1)
+                res.status(404)
             }
-            
-            db.query(`SELECT nickname FROM USERS WHERE userId = ?`,[rows[0].authorId],(err2,nickname)=>{
-                if(err2) console.log(err2)
-                console.log(nickname);
-                rows[0].nickname = nickname[0].nickname;
-                res.send(rows[0]);
-            })
-            
+            else{
+                console.log("get")
+                res.send(rows[0])
+            }
             })
         }
     })
@@ -132,15 +131,37 @@ router.post("/comment/write/:postId", async function (req, res,next) {
       logger.info(`${req.method} / ip : ${ip} id : ${req.user} try comment write but fail $`);
       res.status(400);
     } else {
+        let params = [req.user,req.params.postId]
+        let iknum = 0;
+
+        await db.query(`SELECT userId, ikNum FROM IKCOMMENT WHERE userId = (SELECT userId FROM USERS WHERE numId = ?) AND postId = ? LIMIT 1`,params,(err,rows)=>{
+            
+            if(rows.length == 0){
+                db.query(`SELECT userId FROM IKPOST WHERE userId = (SELECT userId FROM USERS WHERE numId = ?) AND postId = ? LIMIT 1`,(err,result)=>{
+                    //작성자가 댓글 쓰는 경우
+                    if(result.length == 1){
+                        iknum = 0;
+                    }
+                })
+                params = [req.params.postId]
+                db.query(`UPDATE IKPOST SET ikNum = ikNum + 1 where postId = ?`,params,(err2,result)=>{
+                    console.log(result)
+                })
+            }
+            else{
+                iknum = rows[0].ikNum;
+            }
+        });
+        
         //글 작성
-        const params1 = [req.params.postId,req.user,content];
+        const params1 = [req.params.postId,req.user,content,iknum];
         
         let insertid;
         db.query(`INSERT 
         INTO
-        IKCOMMENT(postId, userId, comment, postDate, editDate)
+        IKCOMMENT(postId, userId, comment, postDate, editDate,ikNum)
         VALUES
-        (?,(SELECT userId FROM USERS WHERE numId = ? LIMIT 1),?,NOW(),NOW());`,params1,
+        (?,(SELECT userId FROM USERS WHERE numId = ? LIMIT 1),?,NOW(),NOW(),?);`,params1,
         function(err,rows,fields){
             console.log(rows)
             if(err) console.log(err);
@@ -151,7 +172,7 @@ router.post("/comment/write/:postId", async function (req, res,next) {
             INTO 
             NOTIFICATIONS(userNumId,postId,commentId,alarmType,notificationDate,category)
             VALUES
-            ((SELECT numId FROM USERS WHERE userId = (SELECT authorId FROM IKPOST WHERE postId = ?)) ,?,?,0,NOW(),ik)
+            ((SELECT numId FROM USERS WHERE userId = (SELECT authorId FROM IKPOST WHERE postId = ?)) ,?,?,0,NOW(),'ik')
             `,params2,(err2,results)=>{
               console.log(results)
               if(err2) logger.error(err2)
@@ -166,15 +187,18 @@ router.post("/comment/write/:postId", async function (req, res,next) {
 //댓글 목록 가져오기
 router.get("/comment/list/:postId",function(req,res){
     const params = [req.params.postId];
-    db.query(`SELECT ikNum comment
+    
+    db.query(`SELECT ikNum, comment, postDate,editDate
     FROM IKCOMMENT
     WHERE postId = ?
     `,params,function(err,rows){
-      if(err) console.log(err);
-      else if(rows.length == 0){
-        res.status(404).send('not found');
-      }
-      else{
+    if(err){
+        console.log(err);
+        res.status(404)
+    }
+    else{
+        
+        console.log("comment")
         res.send(rows);
       }
     })
@@ -298,17 +322,18 @@ const cost = 10;        //chatGPT 이용 cost
 
 router.get("/:postId/likescount",function(req,res){
     let params = [req.params.postId];
-    db.query(`SELECT COUNT(*) AS count FROM LIKES WHERE postId = ? AND category = ik`,params,function(err,likerow){
+    db.query(`SELECT COUNT(*) AS count FROM LIKES WHERE postId = ? AND category = 'ik'`,params,function(err,likerow){
         if(err){
             logger.error(`DB ERROR : ${err}`);
             res.status(404);
         }
-        db.query(`SELECT COUNT(*) AS count FROM DISLIKES WHERE postId = ? AND category = ik`,params,function(err2,dislikerow){
+        db.query(`SELECT COUNT(*) AS count FROM DISLIKES WHERE postId = ? AND category = 'ik'`,params,function(err2,dislikerow){
             if(err2){
                 logger.error(`DB ERROR : ${err2}`);
                 res.status(404);
             }
             else{
+                console.log("likescount")
                 res.json({likescount : likerow[0].count,dislikescount : dislikerow[0].count});
             }
             

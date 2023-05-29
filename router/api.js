@@ -9,12 +9,13 @@ const redisdb = require('../db/redisdb');
 //const redisdb = require("../db/redisdb")
 const category = require('./board/category');
 const ik = require('./board/ik');
-const best = require('./board/best')
+const best = require('./board/best');
+const notification = require('./board/notification')
 
-//게시판 목록
+
 router.use('/ik',ik);
 router.use('/best',best);
-
+router.use('/notification',notification)
 
 router.get('/redis', (req,res)=>{
     redisdb.keys('*',(err,keys)=>{
@@ -100,58 +101,6 @@ router.get('/githubid', (req,res)=>{
         });
     }
 })
-
-router.get("/notification/list",function(req,res){
-    console.log("dd")
-    if(req.isAuthenticated()){
-        const params = [req.user]
-        db.query("SELECT postId,commentId,alarmType,notificationDate FROM NOTIFICATIONS WHERE userNumId = ?",params,(err,rows)=>{
-            if(err) logger.error(err)
-            else{
-                res.send(rows);
-            }
-        })
-    }
-    else{
-        res.send(null)
-    }
-})
-
-router.post("/notification/delete",function (req,res){
-    if(req.isAuthenticated()){
-        const params = [req.user,req.body.notificationId];
-        db.query(`DELETE FROM NOTIFICATIONS WHERE userNumId = ? AND notificationId = ? `,params,(err,result)=>{
-
-            if(err){
-                logger.error(err);
-                res.status(404);
-            }
-            else
-                res.redirect("/")
-        })
-    }
-    else{
-        res.status(404);
-    }
-})
-
-router.delete("/notification/deleteAll",function(req,res){
-    if(req.isAuthenticated()){
-        const params = [req.user]
-        db.query(`DELETE FROM NOTIFICATIONS WHERE userNumId = ?`,params,(err)=>{
-            if(err){
-                logger.error(err)
-                res.status(404)
-            }
-            else{
-                res.status(200)
-            }
-        })
-    }
-    else
-        res.send(null)
-})
-
 
 //chatGPT 답변 전송
 router.post("/chatGPT",function(req,res){
