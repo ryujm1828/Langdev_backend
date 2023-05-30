@@ -7,7 +7,6 @@ const reportShow = 1;       //신고 헀을 때 안보이는 기준. (reportShow
 const logger = require('../../log/logger')
 
 router.get("/list",function(req,res){
-    
     let page = 1;//req.query.page;
     const postnum = 20;    //불러올 게시글 개수
     page = Number(page);
@@ -27,7 +26,6 @@ router.get("/list",function(req,res){
     WHERE filtered_reports.postId IS NULL AND Post.isBest = true
     ORDER BY POST.postDate DESC LIMIT ?,?
     `,params,function(err,rows){
-        console.log(rows)
         if(err){
             logger.error(err);
             res.status(404)
