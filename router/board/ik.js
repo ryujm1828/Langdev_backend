@@ -18,7 +18,7 @@ router.get("/list",function(req,res){
     }
     
     let params = [page-1,postnum];
-    db.query(`SELECT title, content, postId FROM IKPOST ORDER BY postDate DESC LIMIT ?,?`,params,function(err,rows){
+    db.query(`SELECT title, content, postId FROM POST where category = 'ik' ORDER by postDate DESC LIMIT ?,?`,params,function(err,rows){
         console.log("ik")
         if(err){
             logger.error(err);
@@ -43,13 +43,14 @@ router.post("/write",function (req,res){
       res.status(400);
     } else {
         //글 작성
-        const params = [title, content, req.user];
+        let tab = 'tempTab'
+        const params = [title, content, req.user,tab];
         let insertid;
         db.query(`INSERT 
         INTO
-        IKPOST(title, content, authorId, postDate, editDate)
+        POST(title, content, authorId, postDate, editDate, category,tab)
         VALUES
-        (?,?,(SELECT userId FROM USERS WHERE numId = ? LIMIT 1),NOW(),NOW());`,params,
+        (?,?,(SELECT userId FROM USERS WHERE numId = ? LIMIT 1),NOW(),NOW(),'ik',?);`,params,
         function(err,rows){
             console.log(rows)
             if(err){
@@ -69,7 +70,7 @@ router.post("/write",function (req,res){
 router.post("/delete/:id",function (req,res){
     if(req.isAuthenticated()){
         const params = [req.user,req.body.postId];
-        db.query(`DELETE FROM IKPOST WHERE authorId = (SELECT userId FROM USERS WHERE numId = ?) AND postId = ?`,params,(err,result)=>{
+        db.query(`DELETE FROM POST WHERE authorId = (SELECT userId FROM USERS WHERE numId = ?) AND postId = ? AND category = 'ik'`,params,(err,result)=>{
             if(err){
                 logger.error(err);
                 res.status(404);
@@ -87,15 +88,15 @@ router.post("/delete/:id",function (req,res){
 router.get("/get/:id",function(req,res){
     let params = [reportShow,req.params.id];
     db.query(`SELECT title,content,postDate,editDate,views
-    FROM IKPOST
+    FROM POST
     LEFT JOIN (
         SELECT postId
         FROM REPORTS
         WHERE category = 'ik'
         GROUP BY postId
         HAVING COUNT(*) >= ?
-    ) AS filtered_reports ON IKPOST.postId = filtered_reports.postId
-    WHERE filtered_reports.postId IS NULL AND IKPOST.postId = ?`,params,function(err,rows){
+    ) AS filtered_reports ON POST.postId = filtered_reports.postId
+    WHERE filtered_reports.postId IS NULL AND POST.postId = ? AND category = 'ik'`,params,function(err,rows){
             
         if(err){
             logger.error(err);
@@ -106,7 +107,7 @@ router.get("/get/:id",function(req,res){
         }
         else{
             params = [req.params.id]
-            db.query(`UPDATE IKPOST SET views = views + 1 WHERE postId = ?`,params,(err1)=>{
+            db.query(`UPDATE POST SET views = views + 1 WHERE postId = ?`,params,(err1)=>{
             if(err1){
                 logger.error(err1)
                 res.status(404)
@@ -134,19 +135,24 @@ router.post("/comment/write/:postId", async function (req, res,next) {
         let params = [req.user,req.params.postId]
         let iknum = 0;
 
-        await db.query(`SELECT userId, ikNum FROM IKCOMMENT WHERE userId = (SELECT userId FROM USERS WHERE numId = ?) AND postId = ? LIMIT 1`,params,(err,rows)=>{
-            
+        //댓글 쓴적 있는지 확인
+        await db.query(`SELECT userId, ikNum FROM COMMENT WHERE userId = (SELECT userId FROM USERS WHERE numId = ?) AND postId = ? LIMIT 1`,params,(err,rows)=>{
+            //없으면
             if(rows.length == 0){
-                db.query(`SELECT userId FROM IKPOST WHERE userId = (SELECT userId FROM USERS WHERE numId = ?) AND postId = ? LIMIT 1`,(err,result)=>{
+                db.query(`SELECT userId FROM POST WHERE userId = (SELECT userId FROM USERS WHERE numId = ?) AND postId = ? LIMIT 1`,(err,result)=>{
                     //작성자가 댓글 쓰는 경우
                     if(result.length == 1){
                         iknum = 0;
                     }
+                    //새로운 사람이 댓글 쓰는 경우
+                    else{
+                        params = [req.params.postId]
+                        db.query(`UPDATE POST SET ikNum = ikNum + 1 where postId = ?`,params,(err2)=>{
+                            iknum = rows[0].ikNum + 1;
+                        })
+                    }
                 })
-                params = [req.params.postId]
-                db.query(`UPDATE IKPOST SET ikNum = ikNum + 1 where postId = ?`,params,(err2,result)=>{
-                    console.log(result)
-                })
+                
             }
             else{
                 iknum = rows[0].ikNum;
@@ -159,9 +165,9 @@ router.post("/comment/write/:postId", async function (req, res,next) {
         let insertid;
         db.query(`INSERT 
         INTO
-        IKCOMMENT(postId, userId, comment, postDate, editDate,ikNum)
+        COMMENT(postId, userId, comment, postDate, editDate,ikNum,category)
         VALUES
-        (?,(SELECT userId FROM USERS WHERE numId = ? LIMIT 1),?,NOW(),NOW(),?);`,params1,
+        (?,(SELECT userId FROM USERS WHERE numId = ? LIMIT 1),?,NOW(),NOW(),?,'ik');`,params1,
         function(err,rows,fields){
             console.log(rows)
             if(err) console.log(err);
@@ -172,7 +178,7 @@ router.post("/comment/write/:postId", async function (req, res,next) {
             INTO 
             NOTIFICATIONS(userNumId,postId,commentId,alarmType,notificationDate,category)
             VALUES
-            ((SELECT numId FROM USERS WHERE userId = (SELECT authorId FROM IKPOST WHERE postId = ?)) ,?,?,0,NOW(),'ik')
+            ((SELECT numId FROM USERS WHERE userId = (SELECT authorId FROM POST WHERE postId = ? AND category = 'ik')) ,?,?,0,NOW(),'ik')
             `,params2,(err2,results)=>{
               console.log(results)
               if(err2) logger.error(err2)
@@ -189,8 +195,8 @@ router.get("/comment/list/:postId",function(req,res){
     const params = [req.params.postId];
     
     db.query(`SELECT ikNum, comment, postDate,editDate
-    FROM IKCOMMENT
-    WHERE postId = ?
+    FROM COMMENT
+    WHERE postId = ? AND category = 'ik'
     `,params,function(err,rows){
     if(err){
         console.log(err);
@@ -207,7 +213,7 @@ router.get("/comment/list/:postId",function(req,res){
 router.post("/comment/delete",function (req,res){
     if(req.isAuthenticated()){
         const params = [req.user,req.body.commentId];
-        db.query(`DELETE FROM IKCOMMENT WHERE userId = (SELECT userId FROM USERS WHERE numId = ?) AND commentId = ? `,params,(err,result)=>{
+        db.query(`DELETE FROM COMMENT WHERE userId = (SELECT userId FROM USERS WHERE numId = ?) AND commentId = ? AND category = 'ik'`,params,(err,result)=>{
             if(err){
                 logger.error(err);
                 res.status(404);
@@ -225,11 +231,11 @@ const bestLike = 1;
 
 router.post("/:postID/like",function(req,res){
     if(req.isAuthenticated()){
+        console.log("좋아요")
         const params = [req.user,req.params.postID];
         db.query(`
-        SELECT *
-        FROM LIKES
-        WHERE authorId = (SELECT userId FROM USERS WHERE numId = ?) AND postId = ? WHERE category = ik LIMIT 1;`,params,function(err1,rows){
+        SELECT * FROM LIKES WHERE authorId = (SELECT userId FROM USERS WHERE numId = ?) AND postId = ? WHERE category = 'ik' LIMIT 1;`,params,function(err1,rows){
+            console.log("좋아요")
             console.log(rows)
             if(err1)
                 logger.error(`DB ERROR : ${err1}`);
@@ -257,7 +263,7 @@ router.post("/:postID/like",function(req,res){
                 })
             }
             else{
-                db.query(`DELETE FROM LIKES WHERE authorId = (SELECT userId FROM USERS WHERE numId = ?) AND postId = ? AND category = ik LIMIT 1`,params,function(err2){
+                db.query(`DELETE FROM LIKES WHERE authorId = (SELECT userId FROM USERS WHERE numId = ?) AND postId = ? AND category = 'ik' LIMIT 1`,params,function(err2){
                     if(err2){
                         logger.error(`DB ERROR : ${err2}`);
                         res.status(500);
@@ -274,7 +280,7 @@ router.post("/:postID/like",function(req,res){
 router.post("/:postID/dislike",function(req,res){
     if(req.isAuthenticated()){
         let params = [req.user,req.params.postID];
-        db.query(`SELECT * FROM DISLIKES WHERE authorId = (SELECT userId FROM USERS WHERE numId = ?) AND postId = ? AND category = ik LIMIT 1`,params,function(err1,rows){
+        db.query(`SELECT * FROM DISLIKES WHERE authorId = (SELECT userId FROM USERS WHERE numId = ?) AND postId = ? AND category = 'ik' LIMIT 1`,params,function(err1,rows){
             if(err1)
                 logger.error(`DB ERROR : ${err1}`);
             if(rows.length == 0){
@@ -283,7 +289,7 @@ router.post("/:postID/dislike",function(req,res){
                 DISLIKES
                 (authorId, postId,category)
                 VALUES 
-                ((SELECT userId FROM USERS WHERE numId = ?),?,ik)
+                ((SELECT userId FROM USERS WHERE numId = ?),?,'ik')
                 `,params,function(err2){
                     if(err2)
                         logger.error(`DB ERROR : ${err2}`);
@@ -291,7 +297,7 @@ router.post("/:postID/dislike",function(req,res){
                         if(err3)
                             logger.error(`DB ERROR : ${err3}`);
                         if(rows2.length != 0){
-                            db.query(`DELETE FROM LIKES WHERE authorId = (SELECT userId FROM USERS WHERE numId = ?) AND postId = ? AND category = ik LIMIT 1`,params,function(err4){
+                            db.query(`DELETE FROM LIKES WHERE authorId = (SELECT userId FROM USERS WHERE numId = ?) AND postId = ? AND category = 'ik' LIMIT 1`,params,function(err4){
                                 if(err4)
                                     logger.error(`DB ERROR : ${err4}`);
                             })
@@ -301,7 +307,7 @@ router.post("/:postID/dislike",function(req,res){
                 
             }
             else{
-                db.query(`DELETE FROM DISLIKES WHERE authorId = (SELECT userId FROM USERS WHERE numId = ?) AND postId = ? AND category = ik LIMIT 1`,params,function(err2){
+                db.query(`DELETE FROM DISLIKES WHERE authorId = (SELECT userId FROM USERS WHERE numId = ?) AND postId = ? AND category = 'ik' LIMIT 1`,params,function(err2){
                     if(err2){
                         logger.error(`DB ERROR : ${err2}`);
                         res.status(500);
@@ -348,7 +354,7 @@ router.post("/:postID/reportPost",function(req,res){
     if(req.isAuthenticated()){
         let params = [req.user,req.params.postID];
         //신고 이미 했는지 확인
-        db.query(`SELECT * FROM REPORTS WHERE userId = (SELECT userId FROM USERS WHERE numId = ?) AND postId = ? AND category = ik LIMIT 1`,params,function(err1,rows){ 
+        db.query(`SELECT * FROM REPORTS WHERE userId = (SELECT userId FROM USERS WHERE numId = ?) AND postId = ? AND category = 'ik' LIMIT 1`,params,function(err1,rows){ 
             if(err1)
                 logger.error(`DB ERROR : ${err1}`);
             if(rows.length == 0){
@@ -358,7 +364,7 @@ router.post("/:postID/reportPost",function(req,res){
                 REPORTS
                 (userId, postId,category)
                 VALUES 
-                ((SELECT userId FROM USERS WHERE numId = ?),?,ik)
+                ((SELECT userId FROM USERS WHERE numId = ?),?,'ik')
                  `,params,function(err2){
                     if(err2){
                         logger.error(`DB ERROR : ${err2}`);
