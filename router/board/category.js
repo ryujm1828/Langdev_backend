@@ -37,7 +37,6 @@ router.get("/list",function(req,res){
                     logger.error(err); 
                     res.status(404)
                 }
-                console.log(category)
                 res.send(rows);
                 //게시글 목록 전송
             });
@@ -58,7 +57,11 @@ router.get("/list",function(req,res){
     
 })
 
+
+
 router.post("/write",function (req,res){
+    console.log("wiret")
+    console.log(req.headers)
     const ip = requestIp.getClientIp(req);
     const title = cleanxss(req.body.title);
     const content = cleanxss(req.body.content);
@@ -66,7 +69,7 @@ router.post("/write",function (req,res){
     console.log(`title : ${title} content : ${content} user : ${req.user}`);
     //title,content
     //board가 없을 때 혹은 로그인이 안되어 있을 때 혹은 권한이 없을 때
-    if(!req.isAuthenticated()  || content.replace(blank_pattern, '') == '' || title.replace(blank_pattern, '') == ''){
+    if(!req.user  || content.replace(blank_pattern, '') == '' || title.replace(blank_pattern, '') == ''){
       logger.info(`${req.method} / ip : ${ip} id : ${req.user} try post but fail $`);
       res.status(400);
     } else {
@@ -144,7 +147,6 @@ router.get("/get/:id",function(req,res){
                         if(err2){
                             console.log(err2)
                         }
-                        console.log(nickname);
                         rows[0].nickname = nickname[0].nickname;
                         res.send(rows[0]);
                     })
@@ -180,7 +182,6 @@ router.post("/comment/write/:postId", async function (req, res,next) {
         VALUES
         (?,(SELECT userId FROM USERS WHERE numId = ? LIMIT 1),?,NOW(),NOW(),?);`,params1,
         function(err,rows,fields){
-            console.log(rows)
             if(err) console.log(err);
             insertid = rows.insertId;
             const params2 = [req.params.postId,req.params.postId,insertid,category]
@@ -191,13 +192,11 @@ router.post("/comment/write/:postId", async function (req, res,next) {
             VALUES
             ((SELECT numId FROM USERS WHERE userId = (SELECT authorId FROM POST WHERE postId = ?)) ,?,?,0,NOW(),?)
             `,params2,(err2,results)=>{
-              console.log(results)
               if(err2) logger.error(err2)
             })
         });
       //글쓰기
     }
-    console.log(req.body);
     res.redirect(`/${category}/${req.params.postId}`);
 });
   
@@ -241,14 +240,12 @@ router.post("/comment/delete",function (req,res){
 const bestLike = 1;
 
 router.post("/:postID/like",function(req,res){
-    if(req.isAuthenticated()){
-        
+    if(req.user){
         const params = [req.user,req.params.postID,category];
         db.query(`
         SELECT *
         FROM LIKES
         WHERE authorId = (SELECT userId FROM USERS WHERE numId = ?) AND postId = ? AND category = ? LIMIT 1;`,params,function(err1,rows){
-            
             if(err1)
                 logger.error(`DB ERROR : ${err1}`);
             if(rows.length == 0){

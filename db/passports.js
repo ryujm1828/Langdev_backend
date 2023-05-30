@@ -1,6 +1,10 @@
-require('dotenv').config();
+
 const passport = require("passport");
 const GitHubStrategy = require("passport-github2").Strategy;
+const JWTStrategy = require('passport-jwt').Strategy;
+const ExtractJwt = require('passport-jwt').ExtractJwt;
+require('dotenv').config();
+const jwtSecret = process.env.JWT_SECRET;
 const db = require("./db");
 
 module.exports = () =>{
@@ -45,4 +49,27 @@ module.exports = () =>{
             return done(null,profile);
         }
     ));
+
+    const jwtOptions = {
+        jwtFromRequest: ExtractJwt.fromHeader('authorization'),
+        secretOrKey: jwtSecret,
+        passReqToCallback: true
+    }
+
+    passport.use(new JWTStrategy(jwtOptions,function(req,payload,done) {
+        console.log("payload")
+        console.log(payload)
+        db.query(`SELECT numId FROM USERS WHERE numId = ?`,[payload.id],(err,results)=>{
+            if(err){
+                return done(err,false)
+            }
+            if(results.length != 0 && Date.now() <= payload.expires){
+                req.user = result[0].numId
+            } else {
+                return done(null, payload)
+            }
+        })
+      }
+    ));
+
 }

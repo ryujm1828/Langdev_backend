@@ -16,7 +16,9 @@ const api = require("./router/api");
 const auth = require("./router/auth");
 const routing = require("./router/routing");
 const redisdb = require("./db/redisdb")
-
+const jwt = require('jsonwebtoken');
+require('dotenv').config();
+const jwtSecret = process.env.JWT_SECRET;
 
 //communication with frontend
 app.use(express.json());
@@ -25,9 +27,29 @@ app.use(express.urlencoded({extended:true}));
 app.use(express.static("../"+__dirname));
 app.use(express.static(path.join(__dirname, front_path)));
 
+
+app.use(function(req,res,next){
+  const token = req.headers.authorization;
+  if (token && token.startsWith("Bearer ")) {
+      console.log(token.substring(7))
+      jwt.verify(token.substring(7),jwtSecret,(err,decoded)=>{
+          req.user = decoded.id;
+          if(err){
+              console.log(err)
+          }
+      })
+  }
+  else
+      req.user = null;
+  
+  next()
+})
+
+
 //connect db
 db.connect();
 
+/*
 redisdb.on("connect",()=>{
   logger.info("Redis connect");
 })
@@ -49,10 +71,10 @@ app.use(session({
   saveUninitialized: false,
   cookie: {secure: false}  //정식에선 true로 바꿔야됨 (https 사용여부)
 }));
-
+*/
 //passport initializion and connect session, connect passport
 app.use(passport.initialize());
-app.use(passport.session());
+//app.use(passport.session());
 passports();
 
 

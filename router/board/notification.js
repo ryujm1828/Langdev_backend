@@ -3,16 +3,21 @@ const router = express.Router({mergeParams: true});
 const db = require("../../db/db");
 //const sanitizer = require("../middle/sanitizer");
 const logger = require('../../log/logger')
+const jwt = require('jsonwebtoken');
+require('dotenv').config();
+const jwtSecret = process.env.JWT_SECRET;
 
-console.log("d")
+
 
 router.get("/list",function(req,res){
-    console.log("dd")
-    if(req.isAuthenticated()){
+    if(req.user){
+        console.log("user")
+        console.log(req.user)
         const params = [req.user]
         db.query("SELECT category,postId,commentId,alarmType,notificationDate FROM NOTIFICATIONS WHERE userNumId = ?",params,(err,rows)=>{
             if(err) logger.error(err)
             else{
+                console.log(rows)
                 res.send(rows);
             }
         })

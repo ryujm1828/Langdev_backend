@@ -11,7 +11,9 @@ const category = require('./board/category');
 const ik = require('./board/ik');
 const best = require('./board/best');
 const notification = require('./board/notification')
-
+const jwt = require('jsonwebtoken');
+require('dotenv').config();
+const jwtSecret = process.env.JWT_SECRET;
 
 router.use('/ik',ik);
 router.use('/best',best);

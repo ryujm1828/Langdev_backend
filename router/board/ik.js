@@ -8,7 +8,6 @@ const requestIp = require("request-ip");    //get ip
 const logger = require('../../log/logger')
 
 router.get("/list",function(req,res){
-    console.log("ik")
     let page = 1; //req.query.page;
     const postnum = 20;    //불러올 게시글 개수
     page = Number(page);
@@ -38,7 +37,7 @@ router.post("/write",function (req,res){
     console.log(`title : ${title} content : ${content} user : ${req.user}`);
     //title,content
     //board가 없을 때 혹은 로그인이 안되어 있을 때 혹은 권한이 없을 때
-    if(!req.isAuthenticated()  || content.replace(blank_pattern, '') == '' || title.replace(blank_pattern, '') == ''){
+    if(!req.user  || content.replace(blank_pattern, '') == '' || title.replace(blank_pattern, '') == ''){
       logger.info(`${req.method} / ip : ${ip} id : ${req.user} try post but fail $`);
       res.status(400);
     } else {
@@ -230,13 +229,12 @@ router.post("/comment/delete",function (req,res){
 const bestLike = 1;
 
 router.post("/:postID/like",function(req,res){
-    if(req.isAuthenticated()){
-        console.log("좋아요")
+    if(req.user){
         const params = [req.user,req.params.postID];
         db.query(`
-        SELECT * FROM LIKES WHERE authorId = (SELECT userId FROM USERS WHERE numId = ?) AND postId = ? WHERE category = 'ik' LIMIT 1;`,params,function(err1,rows){
-            console.log("좋아요")
-            console.log(rows)
+        SELECT *
+        FROM LIKES 
+        WHERE authorId = (SELECT userId FROM USERS WHERE numId = ?) AND postId = ? AND category = 'ik' LIMIT 1;`,params,function(err1,rows){
             if(err1)
                 logger.error(`DB ERROR : ${err1}`);
             if(rows.length == 0){
@@ -246,15 +244,15 @@ router.post("/:postID/like",function(req,res){
                         LIKES
                         (authorId, postId,category)
                         VALUES 
-                        ((SELECT userId FROM USERS WHERE numId = ?),?,ik)
+                        ((SELECT userId FROM USERS WHERE numId = ?),?,'ik')
                 `,params,function(err2){
                     if(err2)
                         logger.error(`DB ERROR : ${err2}`);
-                    db.query(`SELECT * FROM DISLIKES WHERE authorId = (SELECT userId FROM USERS WHERE numId = ?) AND postId = ? category = ik LIMIT 1`,params,function(err3,rows2){
+                    db.query(`SELECT * FROM DISLIKES WHERE authorId = (SELECT userId FROM USERS WHERE numId = ?) AND postId = ? AND category = 'ik' LIMIT 1`,params,function(err3,rows2){
                         if(err3)
                            logger.error(`DB ERROR : ${err3}`);
                         if(rows2.length != 0){
-                            db.query(`DELETE FROM DISLIKES WHERE authorId = (SELECT userId FROM USERS WHERE numId = ?) AND postId = ? AND category = ik LIMIT 1`,params,function(err4){
+                            db.query(`DELETE FROM DISLIKES WHERE authorId = (SELECT userId FROM USERS WHERE numId = ?) AND postId = ? AND category = 'ik' LIMIT 1`,params,function(err4){
                                 if(err4)
                                     logger.error(`DB ERROR : ${err4}`);
                             })
