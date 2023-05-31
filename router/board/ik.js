@@ -124,10 +124,9 @@ router.post("/comment/write/:postId", async function (req, res,next) {
     const ip = requestIp.getClientIp(req);
     const content = cleanxss(req.body.content);
     console.log(`content : ${content} user : ${req.user}`);
-    
     //title,content
     //board가 없을 때 혹은 로그인이 안되어 있을 때 혹은 권한이 없을 때
-    if(!req.isAuthenticated() || content.replace(blank_pattern, '') == ''){
+    if(!req.user || content.replace(blank_pattern, '') == ''){
       logger.info(`${req.method} / ip : ${ip} id : ${req.user} try comment write but fail $`);
       res.status(400);
     } else {
