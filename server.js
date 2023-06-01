@@ -30,12 +30,17 @@ app.use(express.static(path.join(__dirname, front_path)));
 
 app.use(function(req,res,next){
   const token = req.headers.authorization;
+
   if (token && token.startsWith("Bearer ")) {
       console.log(token.substring(7))
-      jwt.verify(token.substring(7),jwtSecret,(err,decoded)=>{
-          req.user = decoded.id;
+      jwt.verify(token.substring(7),jwtSecret,(err,decoded)=>{          
           if(err){
-              console.log(err)
+              logger.error(err);
+              res.status(403);
+          }
+          else{
+            req.user = decoded.id;
+           
           }
       })
   }
@@ -80,7 +85,11 @@ passports();
 
 //log
 app.use("/",function(req,res,next){
-  logger.info(`${req.method} / (${requestIp.getClientIp(req)}) id : ${req.user} enter ${req.url}`);
+  if(!req.user && req.user != null)
+    logger.info(`${req.method} / (${requestIp.getClientIp(req)}) id : ${req.user} enter ${req.url}`);
+  else{
+    logger.info(`${req.method} / (${requestIp.getClientIp(req)}) enter ${req.url}`);
+  }
   next();
 })
 
