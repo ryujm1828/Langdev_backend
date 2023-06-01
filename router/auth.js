@@ -21,10 +21,13 @@ router.get('/github/callback',
   passport.authenticate('github', { failureRedirect: '/login',session:false}),
   async function(req, res) {
     await db.query(`SELECT nickname,userId,numId FROM USERS WHERE numId = ${req.user.id}`,(err,rows)=>{
+      if(err){
+        console.log(err)
+      }
       const userdata = rows[0];
-      const user = {nickname : userdata.nickname, userId : userdata.userId, numId : userdata.numId};
-      const token = jwt.sign({id: req.user.id, expires: Date.now() + 3600}, jwtSecret);
-      console.log({user: req.user, token})
+      const user = {nickname : userdata.nickname, userId : userdata.userId};
+      const token = jwt.sign({id: userdata.userId, expires: Date.now() + 3600}, jwtSecret);
+      
       res.redirect(`/callback/?user=${JSON.stringify(user)}&token=${token}`);
     })
     

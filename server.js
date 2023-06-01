@@ -50,7 +50,6 @@ app.use(function(req,res,next){
   next()
 })
 
-
 //connect db
 db.connect();
 

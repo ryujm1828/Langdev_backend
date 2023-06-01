@@ -14,7 +14,7 @@ router.get("/list",function(req,res){
         console.log("user")
         console.log(req.user)
         const params = [req.user]
-        db.query("SELECT category,postId,commentId,alarmType,notificationDate FROM NOTIFICATIONS WHERE userNumId = ?",params,(err,rows)=>{
+        db.query("SELECT category,postId,commentId,alarmType,notificationDate FROM NOTIFICATIONS WHERE userId = ?",params,(err,rows)=>{
             if(err) logger.error(err)
             else{
                 console.log(rows)
@@ -30,7 +30,7 @@ router.get("/list",function(req,res){
 router.post("/delete",function (req,res){
     if(req.isAuthenticated()){
         const params = [req.user,req.body.notificationId];
-        db.query(`DELETE FROM NOTIFICATIONS WHERE userNumId = ? AND notificationId = ? `,params,(err,result)=>{
+        db.query(`DELETE FROM NOTIFICATIONS WHERE userId = ? AND notificationId = ? `,params,(err,result)=>{
 
             if(err){
                 logger.error(err);
@@ -48,7 +48,7 @@ router.post("/delete",function (req,res){
 router.delete("/deleteAll",function(req,res){
     if(req.isAuthenticated()){
         const params = [req.user]
-        db.query(`DELETE FROM NOTIFICATIONS WHERE userNumId = ?`,params,(err)=>{
+        db.query(`DELETE FROM NOTIFICATIONS WHERE userId = ?`,params,(err)=>{
             if(err){
                 logger.error(err)
                 res.status(404)
