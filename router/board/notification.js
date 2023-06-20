@@ -14,7 +14,7 @@ router.get("/list",function(req,res){
         console.log("user")
         console.log(req.user)
         const params = [req.user]
-        db.query("SELECT category,postId,commentId,alarmType,notificationDate FROM NOTIFICATIONS WHERE userId = ?",params,(err,rows)=>{
+        db.query("SELECT category,postId,commentId,alarmType,notificationDate,notificationId FROM NOTIFICATIONS WHERE userId = ?",params,(err,rows)=>{
             if(err) logger.error(err)
             else{
                 console.log(rows)

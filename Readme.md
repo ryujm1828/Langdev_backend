@@ -17,6 +17,7 @@
 - connect-redis
 - socket.io
 - node-nats-streaming
+- jsonwebtoken
 
 ## api
 ### /api/id

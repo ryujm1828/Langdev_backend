@@ -23,16 +23,12 @@ router.get('/github/callback',
     await db.query(`SELECT nickname,userId,numId FROM USERS WHERE numId = ${req.user.id}`,(err,rows)=>{
       if(err){
         console.log(err)
-      }
+      } 
       const userdata = rows[0];
       const user = {nickname : userdata.nickname, userId : userdata.userId};
       const token = jwt.sign({id: userdata.userId, expires: Date.now() + 3600}, jwtSecret);
-      
       res.redirect(`/callback/?user=${JSON.stringify(user)}&token=${token}`);
     })
-    
-    
-    // Successful authentication, redirect home.
 
 });
 
