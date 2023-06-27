@@ -10,9 +10,9 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "connect-redis": "^7.0.1",
+    "connect-redis": "^7.1.0",
     "cors": "^2.8.5",
-    "dotenv": "^16.0.3",
+    "dotenv": "^16.3.1",
     "express": "^4.18.2",
     "express-mysql-session": "^3.0.0",
     "express-session": "^1.17.3",
@@ -20,16 +20,16 @@
     "mysql": "^2.18.1",
     "node-nats-streaming": "^0.3.2",
     "nodemon": "^2.0.22",
-    "openai": "^3.2.1",
+    "openai": "^3.3.0",
     "passport": "^0.6.0",
     "passport-github2": "^0.1.12",
     "passport-jwt": "^4.0.1",
     "path": "^0.12.7",
-    "redis": "^4.6.6",
+    "redis": "^4.6.7",
     "request-ip": "^3.3.0",
-    "sanitize-html": "^2.10.0",
-    "socket.io": "^4.6.1",
-    "winston": "^3.8.2",
+    "sanitize-html": "^2.11.0",
+    "socket.io": "^4.7.0",
+    "winston": "^3.9.0",
     "winston-daily-rotate-file": "^4.7.1"
   }
 }
