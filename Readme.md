@@ -1,23 +1,23 @@
 # Community_Backend
 ## 사용 모듈
-- express
-- express-seession
-- nodemon
-- passport
-- passport-github2
-- dotenv
-- winston
-- winston-daily-rotate-file
-- mysql
-- express-mysql-session
-- request-ip
-- sanitize-html
-- openai
-- redis
-- connect-redis
-- socket.io
-- node-nats-streaming
-- jsonwebtoken
+npm i express
+npm i express-seession
+npm i nodemon
+npm i passport
+npm i passport-github2
+npm i dotenv
+npm i winston
+npm i winston-daily-rotate-file
+npm i mysql
+npm i express-mysql-session
+npm i request-ip
+npm i sanitize-html
+npm i openai
+npm i redis
+npm i connect-redis
+npm i socket.io
+npm i node-nats-streaming
+npm i jsonwebtoken
 
 ## api
 ### /api/id
