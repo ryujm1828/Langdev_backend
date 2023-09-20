@@ -7,8 +7,6 @@ const jwt = require('jsonwebtoken');
 require('dotenv').config();
 const jwtSecret = process.env.JWT_SECRET;
 
-
-
 router.get("/list",function(req,res){
     if(req.user){
         console.log("user")
