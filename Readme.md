@@ -36,3 +36,6 @@ npm i jsonwebtoken
 - 글 싫어요(post) /api/:category/:postId/dislike
 - 좋아요 개수(get) /api/:category/:postId/likescount
 - 싫어요 개수(get) /api/:category/:postId/
+
+## Image
+![image](https://github.com/ryujm1828/Langdev_backend/assets/83535846/92ae59b2-ee19-46fb-811b-772c76a15132)
