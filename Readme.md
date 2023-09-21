@@ -19,12 +19,6 @@ npm i socket.io
 npm i node-nats-streaming  
 npm i jsonwebtoken  
 
-## 구동방법
-1. cd community_backend 로 폴더에 들어온다
-2. npm i "" 으로 위에 적힌 모듈들을 설치해준다. ex)npm i express
-3. npm start 입력하면 실행 완료
-4. localhost:5000 으로 들어가면 볼 수 있음
-
 ## api
 - 글 목록(get) /api/:category/list
 - 글 작성(post) /api/:category/write
